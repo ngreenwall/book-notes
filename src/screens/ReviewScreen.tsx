@@ -12,7 +12,6 @@ export function ReviewScreen() {
   const updateNote = useNoteStore((state) => state.updateNote);
   const updateStatus = useNoteStore((state) => state.updateStatus);
   const vaultRootUri = useSettingsStore((s) => s.vaultRootUri);
-  const vaultSubfolder = useSettingsStore((s) => s.vaultSubfolder);
 
   const activeNote = notes.find((note) => note.id === activeNoteId) ?? null;
   const [transcriptText, setTranscriptText] = useState("");
@@ -97,7 +96,6 @@ export function ReviewScreen() {
 
     const ok = await saveNoteToVault({
       vaultRootUri,
-      vaultSubfolder,
       markdown,
       createdAt: activeNote.createdAt,
       bookTitle: normalizedBookTitle,

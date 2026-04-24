@@ -17,7 +17,8 @@ describe("buildMarkdownNote", () => {
     expect(markdown).toContain("author: Andrew Hunt");
     expect(markdown).toContain("page: 123");
     expect(markdown).toContain("tags:");
-    expect(markdown).toContain("## Quote");
+    expect(markdown).toContain("## Note");
+    expect(markdown).toMatch(/---\n## Note\n/);
     expect(markdown).toContain("A practical quote.");
   });
 

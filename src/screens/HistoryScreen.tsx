@@ -21,7 +21,6 @@ export function HistoryScreen({ onOpenInReview }: HistoryScreenProps) {
   const deleteNote = useNoteStore((state) => state.deleteNote);
   const getNoteById = useNoteStore((state) => state.getNoteById);
   const vaultRootUri = useSettingsStore((s) => s.vaultRootUri);
-  const vaultSubfolder = useSettingsStore((s) => s.vaultSubfolder);
 
   const retryTranscription = async (noteId: string, audioUri: string) => {
     updateStatus(noteId, "transcribing");
@@ -64,7 +63,6 @@ export function HistoryScreen({ onOpenInReview }: HistoryScreenProps) {
   ) => {
     const ok = await saveNoteToVault({
       vaultRootUri,
-      vaultSubfolder,
       markdown,
       createdAt,
       bookTitle,

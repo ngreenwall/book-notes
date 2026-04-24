@@ -25,7 +25,7 @@ This is what the app can do right now. If something is not listed here, it is pr
 - Generate markdown note content using fixed Obsidian-style frontmatter:
   - `date`, `title`, `author`, `page`, `tags`
   - date format `MM-DD-YYYY`
-- **Save to Vault** writes the note as a `.md` file using a **system folder picker** (configure under **History**). Details: [docs/CONTEXT.md](docs/CONTEXT.md) (vault / iOS session access).
+- **Save to Vault** writes the note as a `.md` file using a **system folder picker** (configure under **Settings** or **History**). Any folder the picker offers—including **iCloud Drive**—works; files are plain Markdown for any editor, and **Obsidian is optional** (frontmatter is compatible if you use it). Details: [docs/CONTEXT.md](docs/CONTEXT.md) (vault / iOS session access).
 - Exported filename format: `Book Title, Page Number, Date.md`.
 - Persist history locally with statuses (`transcribing`, `ready`, `exported`, `failed`).
 
@@ -87,7 +87,7 @@ Use this when you are ready to test on your actual iPhone. A **real device** wor
 5. **[Every session] Keep Metro running** on your Mac (`npm run start`) — the dev client loads the JS bundle from your machine. Use **default LAN** (do not use `npx expo start --localhost` for a phone on Wi‑Fi).
 6. **[Every session] Same Wi‑Fi** for Mac and iPhone — so the phone can reach `http://<your-mac-ip>:8081` (unless you use `npx expo start --tunnel` for difficult networks).
 7. **[If prompted by iOS] Trust the developer app** — **Settings → General → VPN & Device Management** → trust your developer certificate.
-8. **[Every session] In the app, verify permissions + flow** — allow **Microphone** and **Speech Recognition** when prompted, then test **Capture → stop → transcript** and **Save to Vault** after choosing a folder under **History**.
+8. **[Every session] In the app, verify permissions + flow** — allow **Microphone** and **Speech Recognition** when prompted, then test **Capture → stop → transcript** and **Save to Vault** after choosing a folder under **Settings** or **History**.
 
 Signing errors, “No script URL,” firewall, and tunnel mode are covered in [docs/CONTEXT.md](docs/CONTEXT.md) → **Physical iPhone (dev build)** and **Metro / dev server**.
 
@@ -119,7 +119,7 @@ npx expo run:ios --device
 2. Confirm iPhone and Mac are on the same Wi-Fi (or use USB networking).
 3. If prompted, allow **Microphone** and **Speech Recognition** permissions.
 4. Test flow: **Capture → Stop → Transcript appears**.
-5. Go to **History** and use **Choose vault folder** (again if needed after restart), then test **Save to Vault**.
+5. Go to **Settings** or **History** and use **Choose notes folder** (again if needed after restart), then test **Save to Vault**.
 
 #### Why both terminals are needed
 
@@ -180,10 +180,13 @@ src/
     noteFilePath.ts
     saveNoteToVault.ts
     transcribe.ts
+    vaultPicker.ts
   screens/
     CaptureScreen.tsx
     ReviewScreen.tsx
     HistoryScreen.tsx
+    SettingsScreen.tsx
+    WelcomeVaultScreen.tsx
   store/
     useNoteStore.ts
     useSettingsStore.ts

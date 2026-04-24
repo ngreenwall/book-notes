@@ -22,7 +22,6 @@ author: ${author}
 page: ${page}
 tags:
 ---
-
-## Quote
+## Note
 ${body}`;
 }

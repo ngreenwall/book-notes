@@ -72,7 +72,6 @@ describe("saveNoteToVault", () => {
   it("returns false and skips write when title is missing", async () => {
     const ok = await saveNoteToVault({
       vaultRootUri: "vault://root",
-      vaultSubfolder: "Inbox",
       markdown: "body",
       createdAt: "2026-04-24T12:00:00.000Z",
       bookTitle: "   ",
@@ -90,7 +89,6 @@ describe("saveNoteToVault", () => {
 
     const ok = await saveNoteToVault({
       vaultRootUri: "vaultroot",
-      vaultSubfolder: "Inbox",
       markdown: "body",
       createdAt: "2026-04-24T12:00:00.000Z",
       bookTitle: "Deep Work",
@@ -102,7 +100,7 @@ describe("saveNoteToVault", () => {
     expect(fileWriteSpy).not.toHaveBeenCalled();
     expect(alertSpy).toHaveBeenCalledWith(
       "Vault access expired",
-      expect.stringContaining("Choose vault folder again under History")
+      expect.stringContaining("Choose the folder again in Settings or History")
     );
   });
 });

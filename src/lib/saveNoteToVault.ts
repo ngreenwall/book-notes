@@ -22,12 +22,11 @@ function normalizeField(value: string | null | undefined): string {
 }
 
 /**
- * Writes markdown under the chosen vault root and optional subfolder path.
+ * Writes markdown under the chosen vault root.
  * On iOS, access to a previously picked folder may stop after the app restarts; pick the folder again if save fails.
  */
 export async function saveNoteToVault(params: {
   vaultRootUri: string;
-  vaultSubfolder: string;
   markdown: string;
   createdAt: string;
   bookTitle?: string | null;
@@ -37,7 +36,7 @@ export async function saveNoteToVault(params: {
   const normalizedBookTitle = normalizeField(params.bookTitle);
   const normalizedPageNumber = normalizeField(params.pageNumber);
   if (!vaultRootUri) {
-    Alert.alert("Vault", "Choose a vault folder under History first.");
+    Alert.alert("Vault", "Choose a notes folder in Settings or History first.");
     return false;
   }
   if (!normalizedBookTitle) {
@@ -45,12 +44,7 @@ export async function saveNoteToVault(params: {
     return false;
   }
 
-  const relative = buildRelativeNotePath(
-    params.vaultSubfolder,
-    params.createdAt,
-    normalizedBookTitle,
-    normalizedPageNumber
-  );
+  const relative = buildRelativeNotePath("", params.createdAt, normalizedBookTitle, normalizedPageNumber);
   const segments = relative.split("/").filter(Boolean);
   if (segments.length === 0) {
     Alert.alert("Vault", "Could not build a file name for this note.");
@@ -66,7 +60,7 @@ export async function saveNoteToVault(params: {
       sessionVaultRoot = null;
       Alert.alert(
         "Vault access expired",
-        "Could not access the selected vault folder. Choose vault folder again under History (iOS may reset folder permissions after app restart)."
+        "Could not access the selected notes folder. Choose the folder again in Settings or History (iOS may reset folder permissions after app restart)."
       );
       return false;
     }
@@ -88,7 +82,7 @@ export async function saveNoteToVault(params: {
     const message = e instanceof Error ? e.message : String(e);
     Alert.alert(
       "Could not save",
-      `${message}\n\nIf you recently restarted the app, choose the vault folder again (iOS limits access to the last picked folder for one session).`
+      `${message}\n\nIf you recently restarted the app, choose the notes folder again in Settings or History (iOS limits access to the last picked folder for one session).`
     );
     return false;
   }

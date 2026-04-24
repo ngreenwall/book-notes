@@ -1,37 +1,30 @@
 import { Directory } from "expo-file-system";
 import React, { useState } from "react";
-import { Alert, Button, Text, TextInput, View } from "react-native";
+import { Alert, Button, Text, View } from "react-native";
 
-import { rememberVaultDirectoryFromPicker } from "../lib/saveNoteToVault";
+import { pickVaultDirectoryWithValidation } from "../lib/vaultPicker";
 import { useSettingsStore } from "../store/useSettingsStore";
-
-const inputStyle = {
-  borderWidth: 1,
-  borderColor: "#ddd",
-  borderRadius: 10,
-  padding: 12,
-} as const;
 
 export function VaultSettingsCard() {
   const vaultRootUri = useSettingsStore((s) => s.vaultRootUri);
-  const vaultSubfolder = useSettingsStore((s) => s.vaultSubfolder);
   const setVaultRootUri = useSettingsStore((s) => s.setVaultRootUri);
-  const setVaultSubfolder = useSettingsStore((s) => s.setVaultSubfolder);
   const [picking, setPicking] = useState(false);
 
   const chooseFolder = async () => {
     setPicking(true);
     try {
-      const dir = await Directory.pickDirectoryAsync();
-      rememberVaultDirectoryFromPicker(dir);
-      setVaultRootUri(dir.uri);
-    } catch (e) {
-      const message = e instanceof Error ? e.message : String(e);
-      const lower = message.toLowerCase();
-      if (lower.includes("cancel") || lower.includes("canceled") || lower.includes("cancelled")) {
+      const result = await pickVaultDirectoryWithValidation();
+      if (result.kind === "cancelled") {
         return;
       }
-      Alert.alert("Folder", message || "Could not open the folder picker.");
+      if (result.kind === "invalid") {
+        Alert.alert("Folder", result.message, [
+          { text: "Cancel", style: "cancel" },
+          { text: "Retry", onPress: () => void chooseFolder() },
+        ]);
+        return;
+      }
+      setVaultRootUri(result.directory.uri);
     } finally {
       setPicking(false);
     }
@@ -67,29 +60,21 @@ export function VaultSettingsCard() {
         marginBottom: 4,
       }}
     >
-      <Text style={{ fontWeight: "700" }}>Vault</Text>
+      <Text style={{ fontWeight: "700" }}>Notes folder</Text>
       <Text style={{ color: "#666", fontSize: 13 }}>
-        Pick the folder where markdown files should be saved (for example your Obsidian vault or an inbox folder).
-        Optional subfolder is created under that root (e.g. Inbox/Voice notes). On iOS you may need to pick the folder
-        again after restarting the app.
+        Pick the folder where markdown files should be saved (for example your Obsidian vault under iCloud Drive, or
+        an inbox folder). On My iPhone works for local-only notes. On iOS you may need to pick the folder again after
+        restarting the app.
       </Text>
       <Text style={{ fontSize: 13, color: "#333" }}>
         Folder: <Text style={{ fontWeight: "600" }}>{vaultLabel}</Text>
       </Text>
       {vaultRootUri && !vaultAccessible ? (
         <Text style={{ color: "#8a6d3b", fontSize: 12 }}>
-          Current folder access appears unavailable. Choose vault folder again (common after iOS app restart).
+          Current folder access appears unavailable. Choose notes folder again (common after iOS app restart).
         </Text>
       ) : null}
-      <Button title={picking ? "Opening picker…" : "Choose vault folder"} onPress={chooseFolder} disabled={picking} />
-      <TextInput
-        value={vaultSubfolder}
-        onChangeText={setVaultSubfolder}
-        placeholder="Subfolder (optional), e.g. Inbox/Voice notes"
-        autoCapitalize="none"
-        autoCorrect={false}
-        style={inputStyle}
-      />
+      <Button title={picking ? "Opening picker…" : "Choose notes folder"} onPress={chooseFolder} disabled={picking} />
     </View>
   );
 }

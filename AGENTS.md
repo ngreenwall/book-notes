@@ -16,7 +16,7 @@ For architecture, native iOS quirks, Metro, device install, and vault behavior, 
 ## Pointers
 
 - Notes store: `src/store/useNoteStore.ts` — AsyncStorage name `book-notes-voice-store`.
-- Settings: `src/store/useSettingsStore.ts` — `book-notes-voice-settings`; persisted fields include `vaultRootUri`, `vaultSubfolder` (legacy `obsidianRelativeFolder` merged on load).
+- Settings: `src/store/useSettingsStore.ts` — `book-notes-voice-settings`; persisted `vaultRootUri`, `hasCompletedWelcome` (welcome skip/complete + legacy migration).
 - Save markdown: `src/lib/saveNoteToVault.ts`, paths: `src/lib/noteFilePath.ts`.
 
 ## When changing native config

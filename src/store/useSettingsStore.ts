@@ -4,43 +4,46 @@ import { createJSONStorage, persist } from "zustand/middleware";
 
 type PersistedSettings = {
   vaultRootUri: string;
-  vaultSubfolder: string;
+  hasCompletedWelcome: boolean;
 };
 
 type SettingsStore = PersistedSettings & {
   setVaultRootUri: (value: string) => void;
-  setVaultSubfolder: (value: string) => void;
+  completeWelcome: () => void;
 };
 
-function normalizePersistedSettings(persistedState: unknown): PersistedSettings {
+export function normalizePersistedSettings(persistedState: unknown): PersistedSettings {
   if (!persistedState || typeof persistedState !== "object") {
-    return { vaultRootUri: "", vaultSubfolder: "" };
+    return { vaultRootUri: "", hasCompletedWelcome: false };
   }
   const s = persistedState as Record<string, unknown>;
   const vaultRootUri = typeof s.vaultRootUri === "string" ? s.vaultRootUri : "";
-  const vaultSubfolder =
-    typeof s.vaultSubfolder === "string"
-      ? s.vaultSubfolder
-      : typeof s.obsidianRelativeFolder === "string"
-        ? s.obsidianRelativeFolder
-        : "";
-  return { vaultRootUri, vaultSubfolder };
+  // Legacy installs (before welcome flag): do not force onboarding on every launch.
+  const hasCompletedWelcome =
+    "hasCompletedWelcome" in s && typeof s.hasCompletedWelcome === "boolean"
+      ? s.hasCompletedWelcome
+      : true;
+  return { vaultRootUri, hasCompletedWelcome };
 }
 
 export const useSettingsStore = create<SettingsStore>()(
   persist(
     (set) => ({
       vaultRootUri: "",
-      vaultSubfolder: "",
-      setVaultRootUri: (vaultRootUri) => set({ vaultRootUri }),
-      setVaultSubfolder: (vaultSubfolder) => set({ vaultSubfolder }),
+      hasCompletedWelcome: false,
+      setVaultRootUri: (vaultRootUri) =>
+        set((prev) => ({
+          vaultRootUri,
+          ...(vaultRootUri.trim() ? { hasCompletedWelcome: true } : {}),
+        })),
+      completeWelcome: () => set({ hasCompletedWelcome: true }),
     }),
     {
       name: "book-notes-voice-settings",
       storage: createJSONStorage(() => AsyncStorage),
       partialize: (state): PersistedSettings => ({
         vaultRootUri: state.vaultRootUri,
-        vaultSubfolder: state.vaultSubfolder,
+        hasCompletedWelcome: state.hasCompletedWelcome,
       }),
       merge: (persistedState, currentState) => ({
         ...currentState,
