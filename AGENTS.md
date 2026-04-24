@@ -1,5 +1,7 @@
 # Agent instructions — Book Notes Voice
 
+Session history source of truth: write dated session notes in `docs/CONTEXT.md` only.
+
 ## Read first
 
 For architecture, native iOS quirks, Metro, device install, and vault behavior, read **`docs/CONTEXT.md`**. For human-facing setup, **`README.md`**.
