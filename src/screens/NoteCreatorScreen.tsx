@@ -47,6 +47,16 @@ const inputStyle = {
   padding: 12,
 } as const;
 
+/** Snapshot for dirty-check: metadata trimmed to match persisted values; note body unchanged. */
+function serializeFormSnapshot(bookTitle: string, author: string, pageNumber: string, noteBody: string): string {
+  return JSON.stringify({
+    bookTitle: bookTitle.trim(),
+    author: author.trim(),
+    pageNumber: pageNumber.trim(),
+    noteBody,
+  });
+}
+
 export function NoteCreatorScreen({ mode, noteId, onClose, onSaved }: NoteCreatorScreenProps) {
   const createNote = useNoteStore((s) => s.createNote);
   const updateNote = useNoteStore((s) => s.updateNote);
@@ -88,13 +98,9 @@ export function NoteCreatorScreen({ mode, noteId, onClose, onSaved }: NoteCreato
       setNoteBody(note.transcriptText ?? "");
       setPendingAudioUri(null);
       setTranscribeError(note.status === "failed" ? note.errorMessage ?? "Transcription failed." : null);
-      const snap = JSON.stringify({
-        bookTitle: note.bookTitle ?? "",
-        author: note.author ?? "",
-        pageNumber: note.location ?? "",
-        noteBody: note.transcriptText ?? "",
-      });
-      setInitialSnapshot(snap);
+      setInitialSnapshot(
+        serializeFormSnapshot(note.bookTitle ?? "", note.author ?? "", note.location ?? "", note.transcriptText ?? "")
+      );
     },
     [getNoteById]
   );
@@ -112,18 +118,12 @@ export function NoteCreatorScreen({ mode, noteId, onClose, onSaved }: NoteCreato
       setNoteBody("");
       setPendingAudioUri(null);
       setTranscribeError(null);
-      setInitialSnapshot(JSON.stringify({ bookTitle: "", author: "", pageNumber: "", noteBody: "" }));
+      setInitialSnapshot(serializeFormSnapshot("", "", "", ""));
     }
   }, [mode, noteId, resetFromNote]);
 
   const isDirty = () => {
-    const snap = JSON.stringify({
-      bookTitle,
-      author,
-      pageNumber,
-      noteBody,
-    });
-    return snap !== initialSnapshot || !!pendingAudioUri;
+    return serializeFormSnapshot(bookTitle, author, pageNumber, noteBody) !== initialSnapshot || !!pendingAudioUri;
   };
 
   const requestClose = () => {
@@ -295,13 +295,11 @@ export function NoteCreatorScreen({ mode, noteId, onClose, onSaved }: NoteCreato
         createdAt,
         status: "ready",
       });
+      setBookTitle(normalizedBookTitle ?? "");
+      setAuthor(normalizedAuthor ?? "");
+      setPageNumber(normalizedPage ?? "");
       setInitialSnapshot(
-        JSON.stringify({
-          bookTitle: bookTitle.trim(),
-          author: author.trim(),
-          pageNumber: pageNumber.trim(),
-          noteBody,
-        })
+        serializeFormSnapshot(normalizedBookTitle ?? "", normalizedAuthor ?? "", normalizedPage ?? "", noteBody)
       );
       setPendingAudioUri(null);
       Alert.alert("Saved", "Note added to Your Notes.", [{ text: "OK", onPress: onSaved }]);
@@ -339,15 +337,13 @@ export function NoteCreatorScreen({ mode, noteId, onClose, onSaved }: NoteCreato
     storedAudioUriRef.current = finalAudioUri;
     setPendingAudioUri(null);
     setTranscribeError(null);
+    setBookTitle(normalizedBookTitle ?? "");
+    setAuthor(normalizedAuthor ?? "");
+    setPageNumber(normalizedPage ?? "");
     setInitialSnapshot(
-      JSON.stringify({
-        bookTitle: bookTitle.trim(),
-        author: author.trim(),
-        pageNumber: pageNumber.trim(),
-        noteBody,
-      })
+      serializeFormSnapshot(normalizedBookTitle ?? "", normalizedAuthor ?? "", normalizedPage ?? "", noteBody)
     );
-    Alert.alert("Saved", "Note updated.");
+    Alert.alert("Saved", "Note updated.", [{ text: "OK", onPress: onSaved }]);
   };
 
   const title = mode === "new" ? "New note" : "Edit note";
