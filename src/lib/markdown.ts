@@ -5,6 +5,7 @@ export function buildMarkdownNote(note: Pick<Note, "bookTitle" | "location" | "c
   const book = note.bookTitle?.trim() || "Unknown book";
   const pageOrChapter = note.location?.trim() || "N/A";
   const capturedAt = new Date(note.createdAt).toLocaleString();
+  const body = note.transcriptText?.trim() || "_(no transcript yet)_";
 
   return `# ${title}
 
@@ -12,6 +13,6 @@ export function buildMarkdownNote(note: Pick<Note, "bookTitle" | "location" | "c
 - Page / chapter: ${pageOrChapter}
 - Captured: ${capturedAt}
 
-${note.transcriptText}
+${body}
 `;
 }

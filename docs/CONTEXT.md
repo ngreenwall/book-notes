@@ -15,7 +15,7 @@ Deep operational notes for humans and coding agents. **Product overview and inst
 
 ## What this app is
 
-**Book Notes Voice** — Expo React Native: record short voice notes while reading, transcribe on **iOS**, edit in **Review**, save markdown with **Save to Vault** (folder picker + file write). Tabs: **Capture** / **Review** / **History**. State: **Zustand** + **AsyncStorage** (`book-notes-voice-store` for notes, `book-notes-voice-settings` for vault path). Types: `src/types/note.ts`, stores: `src/store/useNoteStore.ts`, `src/store/useSettingsStore.ts`.
+**Book Notes Voice** — Expo React Native: record short voice notes while reading, transcribe on **iOS**, edit in **Review**, save markdown with **Save to Vault** (folder picker + file write). Tabs: **Capture** / **Review** / **History**. State: **Zustand** + **AsyncStorage** (`book-notes-voice-store` for notes, `book-notes-voice-settings` for vault path). Notes store exposes `createNote`, `updateNote`, `updateStatus`, `deleteNote` (also removes the local audio file), `getNoteById`, `setActiveNote`. Status values: `transcribing` | `ready` | `exported` | `failed`. Types: `src/types/note.ts`, stores: `src/store/useNoteStore.ts`, `src/store/useSettingsStore.ts`.
 
 ---
 
@@ -23,11 +23,10 @@ Deep operational notes for humans and coding agents. **Product overview and inst
 
 - **Expo SDK 55**, React 19.2, React Native 0.83.6.
 - **Audio:** `expo-audio` in `CaptureScreen.tsx` (not `expo-av`).
-- **Transcription (iOS):** `expo-speech-recognition` in `src/lib/transcribe.ts` — on-device when supported, else Apple network recognition; **non-iOS** `transcribeAudio` throws (use Review manually).
+- **Transcription (iOS):** `expo-speech-recognition` in `src/lib/transcribe.ts` — on-device when supported, else Apple network recognition; accepts an optional `AbortSignal` (Capture cancels pending transcription on unmount); **non-iOS** `transcribeAudio` throws (use Review manually).
 - **Vault:** `expo-file-system` — `Directory.pickDirectoryAsync`, write via `src/lib/saveNoteToVault.ts`; UI `src/components/VaultSettingsCard.tsx`; optional subfolder in settings. **iOS:** access to the picked folder is **session-scoped**; after a cold app restart the user may need **Choose vault folder** again before saves work.
 - **`app.json` plugins:** `expo-audio`, `expo-asset`, `expo-file-system` (`supportsOpeningDocumentsInPlace: true`), `expo-speech-recognition`.
 - **iOS Info.plist:** `LSSupportsOpeningDocumentsInPlace` for document workflow; no `obsidian` URL scheme (removed when Save to Vault replaced Obsidian URIs).
-- **`openai`:** in `package.json` but unused in `src/` (optional future cloud path).
 - **`patch-package`:** `postinstall` reapplies `patches/expo-constants+55.0.15.patch` (iOS script paths with spaces in `$PODS_TARGET_SRCROOT`).
 - **Path with spaces:** `ios/Podfile.properties.json` sets `ios.buildReactNativeFromSource: true` to avoid `React-Core-prebuilt` issues; first native build is slower. Moving the repo to a path **without spaces** is still the most reliable fix.
 
@@ -147,7 +146,6 @@ Xcode → Settings → Accounts → Manage Certificates → **+** → Apple Deve
 ## Optional cleanup ideas
 
 - RN `SafeAreaView` deprecation — consider `react-native-safe-area-context`.
-- Remove `openai` from `package.json` if staying Apple-only for transcription.
 
 ---
 
@@ -155,4 +153,5 @@ Xcode → Settings → Accounts → Manage Certificates → **+** → Apple Deve
 
 Keep the **newest** entry at the **top** (one or two lines per session is enough).
 
+- **2026-04-24** — architecture review pass: Capture now cancels pending transcription on unmount (AbortSignal) and shows a "Transcribing…" indicator; Review guards local edits with a dirty-ref so store updates don't clobber typing; History has a **Delete** action that also removes the local audio file (new `deleteNote` in `useNoteStore`); markdown shows `_(no transcript yet)_` when empty; `"draft"` dropped from `NoteStatus`; `openai` removed from dependencies.
 - _Add entries here when wrapping a session (what shipped, what is next, blockers)._

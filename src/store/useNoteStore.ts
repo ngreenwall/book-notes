@@ -1,4 +1,5 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { File } from "expo-file-system";
 import { create } from "zustand";
 import { createJSONStorage, persist } from "zustand/middleware";
 
@@ -18,8 +19,21 @@ type NoteStore = {
   setActiveNote: (id: string | null) => void;
   updateNote: (id: string, patch: Partial<Note>) => void;
   updateStatus: (id: string, status: NoteStatus, errorMessage?: string) => void;
+  deleteNote: (id: string) => void;
   getNoteById: (id: string) => Note | undefined;
 };
+
+function deleteAudioFile(audioUri: string | undefined): void {
+  if (!audioUri) return;
+  try {
+    const file = new File(audioUri);
+    if (file.exists) {
+      file.delete();
+    }
+  } catch {
+    // Non-fatal: local scratch file may already be gone.
+  }
+}
 
 export const useNoteStore = create<NoteStore>()(
   persist(
@@ -57,10 +71,21 @@ export const useNoteStore = create<NoteStore>()(
         }));
       },
       updateStatus: (id, status, errorMessage) => {
+        // Passing errorMessage clears any stale error from a previous failure.
         set((state) => ({
           notes: state.notes.map((note) =>
-            note.id === id ? { ...note, status, errorMessage } : note
+            note.id === id ? { ...note, status, errorMessage: errorMessage ?? undefined } : note
           ),
+        }));
+      },
+      deleteNote: (id) => {
+        const note = get().notes.find((n) => n.id === id);
+        if (note) {
+          deleteAudioFile(note.audioUri);
+        }
+        set((state) => ({
+          notes: state.notes.filter((n) => n.id !== id),
+          activeNoteId: state.activeNoteId === id ? null : state.activeNoteId,
         }));
       },
       getNoteById: (id) => get().notes.find((note) => note.id === id),

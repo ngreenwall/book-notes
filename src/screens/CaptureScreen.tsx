@@ -5,8 +5,8 @@ import {
   useAudioRecorder,
   useAudioRecorderState,
 } from "expo-audio";
-import React, { useState } from "react";
-import { Alert, Button, Text, TextInput, View } from "react-native";
+import React, { useEffect, useRef, useState } from "react";
+import { ActivityIndicator, Alert, Button, Text, TextInput, View } from "react-native";
 
 import { buildMarkdownNote } from "../lib/markdown";
 import { transcribeAudio } from "../lib/transcribe";
@@ -23,6 +23,16 @@ export function CaptureScreen() {
 
   const [bookTitle, setBookTitle] = useState("");
   const [location, setLocation] = useState("");
+  const [isTranscribing, setIsTranscribing] = useState(false);
+  const transcribeAbortRef = useRef<AbortController | null>(null);
+  const isMountedRef = useRef(true);
+
+  useEffect(() => {
+    return () => {
+      isMountedRef.current = false;
+      transcribeAbortRef.current?.abort();
+    };
+  }, []);
 
   const startRecording = async () => {
     const { granted } = await requestRecordingPermissionsAsync();
@@ -58,28 +68,41 @@ export function CaptureScreen() {
       const noteId = createNote({ bookTitle, location, audioUri, createdAt });
       setBookTitle("");
       setLocation("");
+      setIsTranscribing(true);
+
+      transcribeAbortRef.current?.abort();
+      const controller = new AbortController();
+      transcribeAbortRef.current = controller;
 
       try {
-        const transcriptText = await transcribeAudio(audioUri);
+        const transcriptText = await transcribeAudio(audioUri, controller.signal);
+        if (controller.signal.aborted) {
+          return;
+        }
         const persisted = getNoteById(noteId);
-        const noteMarkdown = persisted
-          ? buildMarkdownNote({
-              bookTitle: persisted.bookTitle,
-              location: persisted.location,
-              createdAt: persisted.createdAt,
-              transcriptText,
-            })
-          : buildMarkdownNote({
-              bookTitle,
-              location,
-              transcriptText,
-              createdAt,
-            });
+        if (!persisted) {
+          return;
+        }
+        const noteMarkdown = buildMarkdownNote({
+          bookTitle: persisted.bookTitle,
+          location: persisted.location,
+          createdAt: persisted.createdAt,
+          transcriptText,
+        });
 
-        updateNote(noteId, { transcriptText, noteMarkdown, createdAt });
+        updateNote(noteId, { transcriptText, noteMarkdown });
         updateStatus(noteId, "ready");
       } catch (error) {
-        updateStatus(noteId, "failed", String(error));
+        if (!controller.signal.aborted) {
+          updateStatus(noteId, "failed", String(error));
+        }
+      } finally {
+        if (transcribeAbortRef.current === controller) {
+          transcribeAbortRef.current = null;
+        }
+        if (isMountedRef.current) {
+          setIsTranscribing(false);
+        }
       }
     } catch (error) {
       Alert.alert("Recording error", String(error));
@@ -105,13 +128,20 @@ export function CaptureScreen() {
         <Button
           title="Start Recording"
           onPress={startRecording}
-          disabled={recorderState.isRecording}
+          disabled={recorderState.isRecording || isTranscribing}
         />
         <Button title="Stop Recording" onPress={stopRecording} disabled={!recorderState.isRecording} />
       </View>
-      <Text style={{ color: "#666" }}>
-        Record a short note while reading; transcription starts after stopping.
-      </Text>
+      {isTranscribing ? (
+        <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
+          <ActivityIndicator />
+          <Text style={{ color: "#333" }}>Transcribing…</Text>
+        </View>
+      ) : (
+        <Text style={{ color: "#666" }}>
+          Record a short note while reading; transcription starts after stopping.
+        </Text>
+      )}
     </View>
   );
 }

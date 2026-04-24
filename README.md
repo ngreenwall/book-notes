@@ -121,7 +121,6 @@ src/
 
 1. Optional: Android transcription path in `src/lib/transcribe.ts` (file-based recognition needs Android 13+ in `expo-speech-recognition`).
 2. Optional: cloud fallback (e.g. OpenAI Whisper via a backend) if Apple’s transcript quality is not enough.
-3. Optional: remove unused `openai` dependency if you stay Apple-only for transcription.
 
 ## Transcription notes
 

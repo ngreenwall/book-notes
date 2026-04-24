@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { Alert, Button, Text, TextInput, View } from "react-native";
 
 import { buildMarkdownNote } from "../lib/markdown";
@@ -16,10 +16,29 @@ export function ReviewScreen() {
 
   const activeNote = notes.find((note) => note.id === activeNoteId) ?? null;
   const [transcriptText, setTranscriptText] = useState("");
+  const dirtyRef = useRef(false);
+  const loadedIdRef = useRef<string | null>(null);
 
+  // Load transcript on note switch; also accept a new transcript if the user
+  // hasn't typed (e.g. transcription finishes while Review is open).
   useEffect(() => {
-    setTranscriptText(activeNote?.transcriptText ?? "");
+    const id = activeNote?.id ?? null;
+    const incoming = activeNote?.transcriptText ?? "";
+    if (id !== loadedIdRef.current) {
+      loadedIdRef.current = id;
+      dirtyRef.current = false;
+      setTranscriptText(incoming);
+      return;
+    }
+    if (!dirtyRef.current) {
+      setTranscriptText(incoming);
+    }
   }, [activeNote?.id, activeNote?.transcriptText]);
+
+  const onChangeTranscript = (value: string) => {
+    dirtyRef.current = true;
+    setTranscriptText(value);
+  };
 
   const saveTranscript = () => {
     if (!activeNote) return;
@@ -35,6 +54,7 @@ export function ReviewScreen() {
     if (activeNote.status !== "exported") {
       updateStatus(activeNote.id, "ready");
     }
+    dirtyRef.current = false;
     Alert.alert("Saved", "Transcript and markdown updated.");
   };
 
@@ -83,7 +103,7 @@ export function ReviewScreen() {
       <TextInput
         multiline
         value={transcriptText}
-        onChangeText={setTranscriptText}
+        onChangeText={onChangeTranscript}
         placeholder="Transcript appears here..."
         style={{
           borderWidth: 1,

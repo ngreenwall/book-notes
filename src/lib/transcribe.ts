@@ -17,7 +17,8 @@ function normalizeFileUri(uri: string): string {
 
 function transcribeFileWithSpeechRecognition(
   uri: string,
-  requiresOnDeviceRecognition: boolean
+  requiresOnDeviceRecognition: boolean,
+  signal?: AbortSignal
 ): Promise<string> {
   return new Promise((resolve, reject) => {
     const finalParts: string[] = [];
@@ -25,6 +26,7 @@ function transcribeFileWithSpeechRecognition(
     let settled = false;
     let timeoutId: ReturnType<typeof setTimeout> | null = null;
     const subscriptions: { remove: () => void }[] = [];
+    let abortHandler: (() => void) | null = null;
 
     const clearTimer = () => {
       if (timeoutId !== null) {
@@ -37,6 +39,9 @@ function transcribeFileWithSpeechRecognition(
       clearTimer();
       subscriptions.forEach((s) => s.remove());
       subscriptions.length = 0;
+      if (abortHandler && signal) {
+        signal.removeEventListener("abort", abortHandler);
+      }
     };
 
     const finish = (text: string) => {
@@ -108,6 +113,16 @@ function transcribeFileWithSpeechRecognition(
       fail("Speech recognition timed out.");
     }, 180_000);
 
+    if (signal?.aborted) {
+      fail("Transcription cancelled.");
+      return;
+    }
+
+    if (signal) {
+      abortHandler = () => fail("Transcription cancelled.");
+      signal.addEventListener("abort", abortHandler);
+    }
+
     try {
       ExpoSpeechRecognitionModule.start({
         lang: "en-US",
@@ -124,7 +139,10 @@ function transcribeFileWithSpeechRecognition(
   });
 }
 
-export async function transcribeAudio(audioUri: string): Promise<string> {
+export async function transcribeAudio(
+  audioUri: string,
+  signal?: AbortSignal
+): Promise<string> {
   if (Platform.OS !== "ios") {
     throw new Error(
       "Automatic transcription is only available on iOS. Use the Review tab to type or paste your note on this platform."
@@ -145,11 +163,11 @@ export async function transcribeAudio(audioUri: string): Promise<string> {
 
   if (onDeviceSupported) {
     try {
-      return await transcribeFileWithSpeechRecognition(uri, true);
+      return await transcribeFileWithSpeechRecognition(uri, true, signal);
     } catch {
-      return await transcribeFileWithSpeechRecognition(uri, false);
+      return await transcribeFileWithSpeechRecognition(uri, false, signal);
     }
   }
 
-  return await transcribeFileWithSpeechRecognition(uri, false);
+  return await transcribeFileWithSpeechRecognition(uri, false, signal);
 }

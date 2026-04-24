@@ -1,4 +1,4 @@
-export type NoteStatus = "draft" | "transcribing" | "ready" | "exported" | "failed";
+export type NoteStatus = "transcribing" | "ready" | "exported" | "failed";
 
 export type Note = {
   id: string;

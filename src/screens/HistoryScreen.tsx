@@ -1,5 +1,5 @@
 import React from "react";
-import { Button, FlatList, Text, View } from "react-native";
+import { Alert, Button, FlatList, Text, View } from "react-native";
 
 import { VaultSettingsCard } from "../components/VaultSettingsCard";
 import { buildMarkdownNote } from "../lib/markdown";
@@ -17,6 +17,7 @@ export function HistoryScreen({ onOpenInReview }: HistoryScreenProps) {
   const setActiveNote = useNoteStore((state) => state.setActiveNote);
   const updateNote = useNoteStore((state) => state.updateNote);
   const updateStatus = useNoteStore((state) => state.updateStatus);
+  const deleteNote = useNoteStore((state) => state.deleteNote);
   const getNoteById = useNoteStore((state) => state.getNoteById);
   const vaultRootUri = useSettingsStore((s) => s.vaultRootUri);
   const vaultSubfolder = useSettingsStore((s) => s.vaultSubfolder);
@@ -39,6 +40,17 @@ export function HistoryScreen({ onOpenInReview }: HistoryScreenProps) {
     } catch (error) {
       updateStatus(noteId, "failed", String(error));
     }
+  };
+
+  const confirmDelete = (noteId: string, bookTitle?: string) => {
+    Alert.alert(
+      "Delete note?",
+      `This removes "${bookTitle || "Reading Note"}" and its audio file from this device. Any file already saved to your vault is not affected.`,
+      [
+        { text: "Cancel", style: "cancel" },
+        { text: "Delete", style: "destructive", onPress: () => deleteNote(noteId) },
+      ]
+    );
   };
 
   const saveToVault = async (
@@ -103,6 +115,11 @@ export function HistoryScreen({ onOpenInReview }: HistoryScreenProps) {
                   }
                 />
               ) : null}
+              <Button
+                title="Delete"
+                color="#c0392b"
+                onPress={() => confirmDelete(item.id, item.bookTitle)}
+              />
             </View>
           </View>
         )}
