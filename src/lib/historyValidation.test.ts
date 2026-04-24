@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { canSaveToVaultFromHistory } from "../lib/historyValidation";
+import { canSaveToVaultFromHistory } from "./historyValidation";
 
 describe("canSaveToVaultFromHistory", () => {
   it("returns false when title is empty or whitespace", () => {

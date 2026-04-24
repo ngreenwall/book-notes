@@ -6,7 +6,8 @@ export type Note = {
   bookTitle?: string;
   author?: string;
   location?: string;
-  audioUri: string;
+  /** Present when the note was saved with a recording; optional for typed-only notes. */
+  audioUri?: string;
   transcriptText: string;
   noteMarkdown: string;
   status: NoteStatus;

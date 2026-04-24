@@ -60,7 +60,7 @@ export function WelcomeVaultScreen({ onFinished }: WelcomeVaultScreenProps) {
           </Text>
           <Text style={{ fontSize: 13, color: "#666", lineHeight: 20 }}>
             After a full app restart, iOS may require you to choose the folder again before saves work. You can always
-            change it in Settings or History.
+            change it in Settings.
           </Text>
           <View style={{ gap: 10, marginTop: 8 }}>
             <Button title="Set up where notes are saved" onPress={() => setStep("guided")} />
@@ -81,7 +81,7 @@ export function WelcomeVaultScreen({ onFinished }: WelcomeVaultScreenProps) {
           markdown saved—often your existing Obsidian vault folder—then confirm.
         </Text>
         <Text style={{ fontSize: 13, color: "#666", lineHeight: 20 }}>
-          Pick an existing folder you can edit. You can change this anytime in Settings or History.
+          Pick an existing folder you can edit. You can change this anytime in Settings.
         </Text>
         <View style={{ gap: 10, marginTop: 8 }}>
           <Button title={picking ? "Opening Files…" : "Choose folder in Files"} onPress={() => void openPicker()} disabled={picking} />

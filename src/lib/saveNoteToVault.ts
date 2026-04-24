@@ -36,7 +36,7 @@ export async function saveNoteToVault(params: {
   const normalizedBookTitle = normalizeField(params.bookTitle);
   const normalizedPageNumber = normalizeField(params.pageNumber);
   if (!vaultRootUri) {
-    Alert.alert("Vault", "Choose a notes folder in Settings or History first.");
+    Alert.alert("Vault", "Choose a notes folder in Settings first.");
     return false;
   }
   if (!normalizedBookTitle) {
@@ -60,7 +60,7 @@ export async function saveNoteToVault(params: {
       sessionVaultRoot = null;
       Alert.alert(
         "Vault access expired",
-        "Could not access the selected notes folder. Choose the folder again in Settings or History (iOS may reset folder permissions after app restart)."
+        "Could not access the selected notes folder. Choose the folder again in Settings (iOS may reset folder permissions after app restart)."
       );
       return false;
     }
@@ -82,7 +82,7 @@ export async function saveNoteToVault(params: {
     const message = e instanceof Error ? e.message : String(e);
     Alert.alert(
       "Could not save",
-      `${message}\n\nIf you recently restarted the app, choose the notes folder again in Settings or History (iOS limits access to the last picked folder for one session).`
+      `${message}\n\nIf you recently restarted the app, choose the notes folder again in Settings (iOS limits access to the last picked folder for one session).`
     );
     return false;
   }

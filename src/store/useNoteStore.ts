@@ -9,15 +9,16 @@ type CreateNoteInput = {
   bookTitle?: string;
   author?: string;
   location?: string;
-  audioUri: string;
+  audioUri?: string;
+  transcriptText: string;
+  noteMarkdown: string;
   createdAt?: string;
+  status?: NoteStatus;
 };
 
 type NoteStore = {
   notes: Note[];
-  activeNoteId: string | null;
   createNote: (input: CreateNoteInput) => string;
-  setActiveNote: (id: string | null) => void;
   updateNote: (id: string, patch: Partial<Note>) => void;
   updateStatus: (id: string, status: NoteStatus, errorMessage?: string) => void;
   deleteNote: (id: string) => void;
@@ -40,30 +41,35 @@ export const useNoteStore = create<NoteStore>()(
   persist(
     (set, get) => ({
       notes: [],
-      activeNoteId: null,
-      createNote: ({ bookTitle, author, location, audioUri, createdAt }) => {
+      createNote: ({
+        bookTitle,
+        author,
+        location,
+        audioUri,
+        transcriptText,
+        noteMarkdown,
+        createdAt,
+        status,
+      }) => {
         const id = `${Date.now()}-${Math.floor(Math.random() * 10000)}`;
+        const trimmedUri = audioUri?.trim();
         const note: Note = {
           id,
           createdAt: createdAt || new Date().toISOString(),
           bookTitle: bookTitle?.trim() || undefined,
           author: author?.trim() || undefined,
           location: location?.trim() || undefined,
-          audioUri,
-          transcriptText: "",
-          noteMarkdown: "",
-          status: "transcribing",
+          audioUri: trimmedUri || undefined,
+          transcriptText,
+          noteMarkdown,
+          status: status ?? "ready",
         };
 
         set((state) => ({
           notes: [note, ...state.notes],
-          activeNoteId: id,
         }));
 
         return id;
-      },
-      setActiveNote: (id) => {
-        set({ activeNoteId: id });
       },
       updateNote: (id, patch) => {
         set((state) => ({
@@ -87,7 +93,6 @@ export const useNoteStore = create<NoteStore>()(
         }
         set((state) => ({
           notes: state.notes.filter((n) => n.id !== id),
-          activeNoteId: state.activeNoteId === id ? null : state.activeNoteId,
         }));
       },
       getNoteById: (id) => get().notes.find((note) => note.id === id),
@@ -95,6 +100,7 @@ export const useNoteStore = create<NoteStore>()(
     {
       name: "book-notes-voice-store",
       storage: createJSONStorage(() => AsyncStorage),
+      partialize: (state) => ({ notes: state.notes }),
     }
   )
 );

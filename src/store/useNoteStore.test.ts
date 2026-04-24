@@ -24,7 +24,7 @@ import { useNoteStore } from "./useNoteStore";
 
 describe("useNoteStore", () => {
   beforeEach(() => {
-    useNoteStore.setState({ notes: [], activeNoteId: null });
+    useNoteStore.setState({ notes: [] });
   });
 
   it("creates and updates a note status", () => {
@@ -34,27 +34,30 @@ describe("useNoteStore", () => {
       location: "10",
       audioUri: "file:///tmp/audio.m4a",
       createdAt: "2026-04-24T12:00:00.000Z",
+      transcriptText: "Hello",
+      noteMarkdown: "---\n## Note\nHello\n",
     });
 
     let note = useNoteStore.getState().getNoteById(id);
     expect(note?.bookTitle).toBe("Book");
     expect(note?.author).toBe("Author");
-    expect(note?.status).toBe("transcribing");
-
-    useNoteStore.getState().updateStatus(id, "ready");
-    note = useNoteStore.getState().getNoteById(id);
     expect(note?.status).toBe("ready");
+
+    useNoteStore.getState().updateStatus(id, "exported");
+    note = useNoteStore.getState().getNoteById(id);
+    expect(note?.status).toBe("exported");
   });
 
-  it("deletes the note and clears active selection", () => {
+  it("creates a typed-only note without audio and deletes it", () => {
     const id = useNoteStore.getState().createNote({
       bookTitle: "Book",
-      audioUri: "file:///tmp/audio.m4a",
+      transcriptText: "Typed body",
+      noteMarkdown: "---\n## Note\nTyped body\n",
     });
-    useNoteStore.getState().setActiveNote(id);
+    const note = useNoteStore.getState().getNoteById(id);
+    expect(note?.audioUri).toBeUndefined();
     useNoteStore.getState().deleteNote(id);
 
     expect(useNoteStore.getState().getNoteById(id)).toBeUndefined();
-    expect(useNoteStore.getState().activeNoteId).toBeNull();
   });
 });

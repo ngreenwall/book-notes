@@ -100,7 +100,7 @@ describe("saveNoteToVault", () => {
     expect(fileWriteSpy).not.toHaveBeenCalled();
     expect(alertSpy).toHaveBeenCalledWith(
       "Vault access expired",
-      expect.stringContaining("Choose the folder again in Settings or History")
+      expect.stringContaining("Choose the folder again in Settings")
     );
   });
 });

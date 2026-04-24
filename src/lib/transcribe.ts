@@ -145,7 +145,7 @@ export async function transcribeAudio(
 ): Promise<string> {
   if (Platform.OS !== "ios") {
     throw new Error(
-      "Automatic transcription is only available on iOS. Use the Review tab to type or paste your note on this platform."
+      "Automatic transcription is only available on iOS. Type your note in the note creator on this platform."
     );
   }
 

@@ -16,15 +16,15 @@ Session history source of truth: keep dated session updates in this file only.
 
 ## What this app is
 
-**Book Notes Voice** — Expo React Native: record short voice notes while reading, transcribe on **iOS**, edit in **Review**, save markdown with **Save to Vault** (folder picker + file write). Tabs: **Capture** / **Review** / **History** / **Settings**. State: **Zustand** + **AsyncStorage** (`book-notes-voice-store` for notes, `book-notes-voice-settings` for `vaultRootUri` + `hasCompletedWelcome`). Notes store exposes `createNote`, `updateNote`, `updateStatus`, `deleteNote` (also removes the local audio file), `getNoteById`, `setActiveNote`. Status values: `transcribing` | `ready` | `exported` | `failed`. Types: `src/types/note.ts`, stores: `src/store/useNoteStore.ts`, `src/store/useSettingsStore.ts`.
+**Book Notes Voice** — Expo React Native: type or dictate reading notes, transcribe on **iOS**, save markdown with **Save to Vault** (folder picker + file write). Tabs: **Home** / **Your Notes** / **Settings**; **Note creator** is a full-screen overlay (new or edit). State: **Zustand** + **AsyncStorage** (`book-notes-voice-store` persists `notes` only; `book-notes-voice-settings` for `vaultRootUri` + `hasCompletedWelcome`). Notes store exposes `createNote`, `updateNote`, `updateStatus`, `deleteNote` (also removes the local audio file when present), `getNoteById`. Status values: `transcribing` | `ready` | `exported` | `failed`. Types: `src/types/note.ts`, stores: `src/store/useNoteStore.ts`, `src/store/useSettingsStore.ts`.
 
 ---
 
 ## Current stack (high signal)
 
 - **Expo SDK 55**, React 19.2, React Native 0.83.6.
-- **Audio:** `expo-audio` in `CaptureScreen.tsx` (not `expo-av`).
-- **Transcription (iOS):** `expo-speech-recognition` in `src/lib/transcribe.ts` — on-device when supported, else Apple network recognition; accepts an optional `AbortSignal` (Capture cancels pending transcription on unmount); **non-iOS** `transcribeAudio` throws (use Review manually).
+- **Audio:** `expo-audio` in `NoteCreatorScreen.tsx` (not `expo-av`).
+- **Transcription (iOS):** `expo-speech-recognition` in `src/lib/transcribe.ts` — on-device when supported, else Apple network recognition; accepts an optional `AbortSignal` (Note creator cancels pending transcription on unmount); **non-iOS** `transcribeAudio` throws (type the note manually).
 - **Vault:** `expo-file-system` — `Directory.pickDirectoryAsync`, post-pick validate + write probe in `src/lib/vaultPicker.ts`, write via `src/lib/saveNoteToVault.ts`; UI `VaultSettingsCard`, **Settings** tab, **iOS-only** welcome in `App.tsx` (`WelcomeVaultScreen`). **iOS:** access to the picked folder is **session-scoped**; after a cold app restart the user may need **Choose notes folder** again before saves work.
 - **Export contract:** markdown uses app-side Obsidian frontmatter (`date`, `title`, `author`, `page`, `tags`) with `MM-DD-YYYY` dates, plus `## Note` body. Filename uses `Book Title, Page Number, Date.md`.
 - **`app.json` plugins:** `expo-audio`, `expo-asset`, `expo-file-system` (`supportsOpeningDocumentsInPlace: true`), `expo-speech-recognition`.
@@ -38,10 +38,10 @@ Session history source of truth: keep dated session updates in this file only.
 
 | Area | Files |
 |------|--------|
-| Tabs / navigation | `App.tsx` |
-| Capture / record | `src/screens/CaptureScreen.tsx` |
-| Transcript edit | `src/screens/ReviewScreen.tsx` |
-| History + vault card in list header | `src/screens/HistoryScreen.tsx` |
+| Tabs / navigation + note creator overlay | `App.tsx` |
+| Home hub | `src/screens/HomeScreen.tsx` |
+| New / edit note (record, transcribe, save) | `src/screens/NoteCreatorScreen.tsx` |
+| Note list + Save to Vault / delete | `src/screens/YourNotesScreen.tsx` |
 | Settings tab + vault | `src/screens/SettingsScreen.tsx`, `VaultSettingsCard` |
 | iOS welcome / guided folder copy | `src/screens/WelcomeVaultScreen.tsx` |
 | Markdown body | `src/lib/markdown.ts` |
@@ -50,7 +50,7 @@ Session history source of truth: keep dated session updates in this file only.
 | Pick folder + validate | `src/lib/vaultPicker.ts` |
 | Settings persist | `src/store/useSettingsStore.ts` (`vaultRootUri`, `hasCompletedWelcome`) |
 
-**Layout:** `HistoryScreen` uses `FlatList` and is **not** nested inside the same outer `ScrollView` as Capture/Review (avoids VirtualizedList warning).
+**Layout:** `YourNotesScreen` uses `FlatList` and is **not** nested inside the same outer `ScrollView` as Home (avoids VirtualizedList warning).
 
 ---
 
@@ -159,8 +159,9 @@ Keep the **newest** entry at the **top** (one or two lines per session is enough
 
 - None.
 
+- **2026-04-24** — Shipped: **Home / Your Notes / Settings** + full-screen **Note creator** (new/edit: type or record, **Stop & transcribe** appends to non-empty note, **Save note** writes store on tap); optional `audioUri`; `useNoteStore` persists `notes` only; removed Capture/Review/History; `historyValidation.test.ts`; README/AGENTS/CONTEXT + non-iOS transcribe string updated. Vault folder UI remains **Settings**-only (no picker on list). **Next:** none. **Blockers:** none.
 - **2026-04-24** — Shipped: vault markdown body heading is `## Note` (replaces `## Quote`); removed extra blank line between closing frontmatter `---` and that heading (`src/lib/markdown.ts`, `markdown.test.ts`). **Next:** none. **Blockers:** none.
-- **2026-04-24** — Shipped: iOS-only welcome + Skip with `hasCompletedWelcome`, legacy migration (no key → skip welcome loop), Settings tab + shared `pickVaultDirectoryWithValidation` (exists + write probe, no leftover probe file), optional dismissible banner when no folder; strings point to Settings or History. **Confirmed:** v1 stays **pick an existing folder** only (no auto-create under iCloud parent); users use **New Folder** in Files or an existing vault, then select it. Re-test welcome from a **clean install** (delete app) because migrated installs skip welcome. **Next:** none vault-specific. **Blockers:** none.
+- **2026-04-24** — Shipped: iOS-only welcome + Skip with `hasCompletedWelcome`, legacy migration (no key → skip welcome loop), Settings tab + shared `pickVaultDirectoryWithValidation` (exists + write probe, no leftover probe file), optional dismissible banner when no folder; strings point to Settings for folder changes. **Confirmed:** v1 stays **pick an existing folder** only (no auto-create under iCloud parent); users use **New Folder** in Files or an existing vault, then select it. Re-test welcome from a **clean install** (delete app) because migrated installs skip welcome. **Next:** none vault-specific. **Blockers:** none.
 - **2026-04-24** — Shipped: `SafeAreaProvider` at app root (`App.tsx`); removed vault subfolder—settings persist `vaultRootUri` only, `saveNoteToVault` writes `.md` at picked folder root; README notes iCloud/any folder and Obsidian optional. **Next:** anyone who used a subfolder should pick that destination folder once in **Choose vault folder**. **Blockers:** none.
 - **2026-04-24** — handoff hygiene hardening pass: standardized single-source session history guidance, added retention/dedup/template/blocker guardrails in docs, and tightened `/handoff` with a noise-word check. **Next:** follow this policy in normal use and create `docs/archive/context-YYYY-MM.md` once recent notes exceed 10 entries. **Blockers:** none.
 - **2026-04-24** — command rename pass: replaced project handoff command from `/closeout` to `/handoff`; updated command file path to `.cursor/commands/handoff.md`; aligned README and context references to the new name. **Next:** keep using `/handoff` for end-of-session updates and copy `.cursor/commands/handoff.md` into new repos when useful. **Blockers:** none.

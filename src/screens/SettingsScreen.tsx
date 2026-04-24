@@ -9,7 +9,7 @@ export function SettingsScreen() {
       <View style={{ gap: 12 }}>
         <Text style={{ fontSize: 22, fontWeight: "700" }}>Settings</Text>
         <Text style={{ color: "#666", fontSize: 14 }}>
-          Change where “Save to Vault” writes markdown. The same controls appear under History for quick access.
+          Change where “Save to Vault” writes markdown files on this device.
         </Text>
         <VaultSettingsCard />
       </View>

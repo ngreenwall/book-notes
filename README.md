@@ -19,15 +19,14 @@ Cursor loads [`.cursor/rules/book-notes-voice.mdc`](.cursor/rules/book-notes-voi
 
 This is what the app can do right now. If something is not listed here, it is probably not built yet.
 
-- Record a short voice note while reading.
-- Auto-transcribe after recording on **iOS** using Apple Speech (on-device when supported; falls back to Apple’s network recognition if needed).
-- Edit transcript and metadata (`title`, `author`, `page`) in **Review**.
+- Create notes from **Home** → **New note** (full-screen note creator): metadata (`title`, `author`, `page`) and a **Note** field you can type or fill with **Stop & transcribe** on **iOS** (Apple Speech; on-device when supported, else network).
+- Open **Your Notes** to edit, **Save to vault** (markdown file), or delete.
 - Generate markdown note content using fixed Obsidian-style frontmatter:
   - `date`, `title`, `author`, `page`, `tags`
   - date format `MM-DD-YYYY`
-- **Save to Vault** writes the note as a `.md` file using a **system folder picker** (configure under **Settings** or **History**). Any folder the picker offers—including **iCloud Drive**—works; files are plain Markdown for any editor, and **Obsidian is optional** (frontmatter is compatible if you use it). Details: [docs/CONTEXT.md](docs/CONTEXT.md) (vault / iOS session access).
+- **Save to Vault** writes the note as a `.md` file using a **system folder picker** (configure under **Settings**). Any folder the picker offers—including **iCloud Drive**—works; files are plain Markdown for any editor, and **Obsidian is optional** (frontmatter is compatible if you use it). Details: [docs/CONTEXT.md](docs/CONTEXT.md) (vault / iOS session access).
 - Exported filename format: `Book Title, Page Number, Date.md`.
-- Persist history locally with statuses (`transcribing`, `ready`, `exported`, `failed`).
+- Persist notes locally with statuses (`transcribing`, `ready`, `exported`, `failed`).
 
 ## Stack
 
@@ -87,7 +86,7 @@ Use this when you are ready to test on your actual iPhone. A **real device** wor
 5. **[Every session] Keep Metro running** on your Mac (`npm run start`) — the dev client loads the JS bundle from your machine. Use **default LAN** (do not use `npx expo start --localhost` for a phone on Wi‑Fi).
 6. **[Every session] Same Wi‑Fi** for Mac and iPhone — so the phone can reach `http://<your-mac-ip>:8081` (unless you use `npx expo start --tunnel` for difficult networks).
 7. **[If prompted by iOS] Trust the developer app** — **Settings → General → VPN & Device Management** → trust your developer certificate.
-8. **[Every session] In the app, verify permissions + flow** — allow **Microphone** and **Speech Recognition** when prompted, then test **Capture → stop → transcript** and **Save to Vault** after choosing a folder under **Settings** or **History**.
+8. **[Every session] In the app, verify permissions + flow** — allow **Microphone** and **Speech Recognition** when prompted, then test **Home → New note → Stop & transcribe** (or type a note) **→ Save note**, then **Save to Vault** from **Your Notes** after choosing a folder under **Settings**.
 
 Signing errors, “No script URL,” firewall, and tunnel mode are covered in [docs/CONTEXT.md](docs/CONTEXT.md) → **Physical iPhone (dev build)** and **Metro / dev server**.
 
@@ -118,8 +117,8 @@ npx expo run:ios --device
 1. Open the installed **booknotesvoice** dev app.
 2. Confirm iPhone and Mac are on the same Wi-Fi (or use USB networking).
 3. If prompted, allow **Microphone** and **Speech Recognition** permissions.
-4. Test flow: **Capture → Stop → Transcript appears**.
-5. Go to **Settings** or **History** and use **Choose notes folder** (again if needed after restart), then test **Save to Vault**.
+4. Test flow: **Home → New note → Stop & transcribe** (or type), then **Save note** and **Your Notes → Save to vault**.
+5. Go to **Settings** and use **Choose notes folder** (again if needed after restart), then test **Save to Vault**.
 
 #### Why both terminals are needed
 
@@ -182,9 +181,9 @@ src/
     transcribe.ts
     vaultPicker.ts
   screens/
-    CaptureScreen.tsx
-    ReviewScreen.tsx
-    HistoryScreen.tsx
+    HomeScreen.tsx
+    NoteCreatorScreen.tsx
+    YourNotesScreen.tsx
     SettingsScreen.tsx
     WelcomeVaultScreen.tsx
   store/
@@ -206,6 +205,6 @@ These are "nice to have" ideas for later. You can ignore them if your current go
 Use these notes if transcription is missing, looks wrong, or behaves differently across devices.
 
 - **iOS:** After `npx expo run:ios`, grant microphone + speech recognition when prompted. On-device recognition is used when the device supports it; otherwise the module falls back to Apple’s networked speech service.
-- **Other platforms:** `transcribeAudio` throws; use Review to type or paste.
+- **Other platforms:** `transcribeAudio` throws; type the note in the note creator instead of using recording.
 - Keep local audio files intact when transcription fails.
 - Note states: `transcribing` → `ready` or `transcribing` → `failed`.
