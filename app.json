@@ -12,17 +12,45 @@
       "backgroundColor": "#ffffff"
     },
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "infoPlist": {
+        "NSSpeechRecognitionUsageDescription": "Allow $(PRODUCT_NAME) to transcribe your voice notes on device when possible.",
+        "NSMicrophoneUsageDescription": "Allow $(PRODUCT_NAME) to record short voice notes while you read."
+      },
+      "bundleIdentifier": "com.anonymous.book-notes-voice"
     },
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#ffffff"
       },
-      "predictiveBackGestureEnabled": false
+      "predictiveBackGestureEnabled": false,
+      "permissions": [
+        "android.permission.RECORD_AUDIO",
+        "android.permission.MODIFY_AUDIO_SETTINGS",
+        "android.permission.FOREGROUND_SERVICE",
+        "android.permission.FOREGROUND_SERVICE_MEDIA_PLAYBACK"
+      ]
     },
     "web": {
       "favicon": "./assets/favicon.png"
-    }
+    },
+    "plugins": [
+      "expo-audio",
+      "expo-asset",
+      [
+        "expo-file-system",
+        {
+          "supportsOpeningDocumentsInPlace": true
+        }
+      ],
+      [
+        "expo-speech-recognition",
+        {
+          "microphonePermission": "Allow $(PRODUCT_NAME) to record short voice notes while you read.",
+          "speechRecognitionPermission": "Allow $(PRODUCT_NAME) to transcribe your voice notes on device when possible."
+        }
+      ]
+    ]
   }
 }

@@ -19,11 +19,20 @@ export default function App() {
         <TabButton label="Review" active={screen === "review"} onPress={() => setScreen("review")} />
         <TabButton label="History" active={screen === "history"} onPress={() => setScreen("history")} />
       </View>
-      <ScrollView contentContainerStyle={{ padding: 16, paddingBottom: 30 }}>
-        {screen === "capture" ? <CaptureScreen /> : null}
-        {screen === "review" ? <ReviewScreen /> : null}
-        {screen === "history" ? <HistoryScreen /> : null}
-      </ScrollView>
+      {screen === "history" ? (
+        <View style={{ flex: 1, paddingHorizontal: 16, paddingBottom: 16 }}>
+          <HistoryScreen onOpenInReview={() => setScreen("review")} />
+        </View>
+      ) : (
+        <ScrollView
+          style={{ flex: 1 }}
+          contentContainerStyle={{ padding: 16, paddingBottom: 30 }}
+          keyboardShouldPersistTaps="handled"
+        >
+          {screen === "capture" ? <CaptureScreen /> : null}
+          {screen === "review" ? <ReviewScreen /> : null}
+        </ScrollView>
+      )}
     </SafeAreaView>
   );
 }

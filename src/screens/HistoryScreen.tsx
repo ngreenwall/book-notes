@@ -1,30 +1,62 @@
-import * as Clipboard from "expo-clipboard";
 import React from "react";
 import { Button, FlatList, Text, View } from "react-native";
 
+import { VaultSettingsCard } from "../components/VaultSettingsCard";
+import { buildMarkdownNote } from "../lib/markdown";
+import { saveNoteToVault } from "../lib/saveNoteToVault";
 import { transcribeAudio } from "../lib/transcribe";
 import { useNoteStore } from "../store/useNoteStore";
+import { useSettingsStore } from "../store/useSettingsStore";
 
-export function HistoryScreen() {
+type HistoryScreenProps = {
+  onOpenInReview: () => void;
+};
+
+export function HistoryScreen({ onOpenInReview }: HistoryScreenProps) {
   const notes = useNoteStore((state) => state.notes);
   const setActiveNote = useNoteStore((state) => state.setActiveNote);
   const updateNote = useNoteStore((state) => state.updateNote);
   const updateStatus = useNoteStore((state) => state.updateStatus);
+  const getNoteById = useNoteStore((state) => state.getNoteById);
+  const vaultRootUri = useSettingsStore((s) => s.vaultRootUri);
+  const vaultSubfolder = useSettingsStore((s) => s.vaultSubfolder);
 
   const retryTranscription = async (noteId: string, audioUri: string) => {
     updateStatus(noteId, "transcribing");
     try {
       const transcriptText = await transcribeAudio(audioUri);
-      updateNote(noteId, { transcriptText });
+      const note = getNoteById(noteId);
+      const noteMarkdown = note
+        ? buildMarkdownNote({
+            bookTitle: note.bookTitle,
+            location: note.location,
+            createdAt: note.createdAt,
+            transcriptText,
+          })
+        : "";
+      updateNote(noteId, { transcriptText, noteMarkdown });
       updateStatus(noteId, "ready");
     } catch (error) {
       updateStatus(noteId, "failed", String(error));
     }
   };
 
-  const copyMarkdown = async (noteId: string, markdown: string) => {
-    await Clipboard.setStringAsync(markdown);
-    updateStatus(noteId, "exported");
+  const saveToVault = async (
+    noteId: string,
+    markdown: string,
+    createdAt: string,
+    bookTitle?: string
+  ) => {
+    const ok = await saveNoteToVault({
+      vaultRootUri,
+      vaultSubfolder,
+      markdown,
+      createdAt,
+      bookTitle,
+    });
+    if (ok) {
+      updateStatus(noteId, "exported");
+    }
   };
 
   return (
@@ -33,6 +65,7 @@ export function HistoryScreen() {
       <FlatList
         data={notes}
         keyExtractor={(item) => item.id}
+        ListHeaderComponent={<VaultSettingsCard />}
         ListEmptyComponent={<Text style={{ color: "#666" }}>No notes yet.</Text>}
         ItemSeparatorComponent={() => <View style={{ height: 10 }} />}
         renderItem={({ item }) => (
@@ -49,7 +82,13 @@ export function HistoryScreen() {
             <Text style={{ color: "#666" }}>{new Date(item.createdAt).toLocaleString()}</Text>
             <Text>Status: {item.status}</Text>
             <View style={{ gap: 6 }}>
-              <Button title="Open In Review" onPress={() => setActiveNote(item.id)} />
+              <Button
+                title="Open In Review"
+                onPress={() => {
+                  setActiveNote(item.id);
+                  onOpenInReview();
+                }}
+              />
               {item.status === "failed" ? (
                 <Button
                   title="Retry Transcription"
@@ -57,7 +96,12 @@ export function HistoryScreen() {
                 />
               ) : null}
               {item.noteMarkdown ? (
-                <Button title="Copy Markdown" onPress={() => copyMarkdown(item.id, item.noteMarkdown)} />
+                <Button
+                  title="Save to Vault"
+                  onPress={() =>
+                    saveToVault(item.id, item.noteMarkdown, item.createdAt, item.bookTitle)
+                  }
+                />
               ) : null}
             </View>
           </View>

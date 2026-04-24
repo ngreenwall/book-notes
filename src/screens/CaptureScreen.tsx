@@ -1,4 +1,10 @@
-import { Audio } from "expo-av";
+import {
+  RecordingPresets,
+  requestRecordingPermissionsAsync,
+  setAudioModeAsync,
+  useAudioRecorder,
+  useAudioRecorderState,
+} from "expo-audio";
 import React, { useState } from "react";
 import { Alert, Button, Text, TextInput, View } from "react-native";
 
@@ -10,38 +16,38 @@ export function CaptureScreen() {
   const createNote = useNoteStore((state) => state.createNote);
   const updateNote = useNoteStore((state) => state.updateNote);
   const updateStatus = useNoteStore((state) => state.updateStatus);
+  const getNoteById = useNoteStore((state) => state.getNoteById);
 
-  const [recording, setRecording] = useState<Audio.Recording | null>(null);
+  const audioRecorder = useAudioRecorder(RecordingPresets.HIGH_QUALITY);
+  const recorderState = useAudioRecorderState(audioRecorder);
+
   const [bookTitle, setBookTitle] = useState("");
   const [location, setLocation] = useState("");
 
   const startRecording = async () => {
-    const permission = await Audio.requestPermissionsAsync();
-    if (!permission.granted) {
+    const { granted } = await requestRecordingPermissionsAsync();
+    if (!granted) {
       Alert.alert("Microphone permission required");
       return;
     }
 
-    await Audio.setAudioModeAsync({
-      allowsRecordingIOS: true,
-      playsInSilentModeIOS: true,
+    await setAudioModeAsync({
+      allowsRecording: true,
+      playsInSilentMode: true,
     });
 
-    const newRecording = new Audio.Recording();
-    await newRecording.prepareToRecordAsync(Audio.RecordingOptionsPresets.HIGH_QUALITY);
-    await newRecording.startAsync();
-    setRecording(newRecording);
+    await audioRecorder.prepareToRecordAsync();
+    audioRecorder.record();
   };
 
   const stopRecording = async () => {
-    if (!recording) {
+    if (!recorderState.isRecording) {
       return;
     }
 
     try {
-      await recording.stopAndUnloadAsync();
-      const audioUri = recording.getURI();
-      setRecording(null);
+      await audioRecorder.stop();
+      const audioUri = audioRecorder.uri;
 
       if (!audioUri) {
         Alert.alert("No audio file was created.");
@@ -55,12 +61,20 @@ export function CaptureScreen() {
 
       try {
         const transcriptText = await transcribeAudio(audioUri);
-        const noteMarkdown = buildMarkdownNote({
-          bookTitle,
-          location,
-          transcriptText,
-          createdAt,
-        });
+        const persisted = getNoteById(noteId);
+        const noteMarkdown = persisted
+          ? buildMarkdownNote({
+              bookTitle: persisted.bookTitle,
+              location: persisted.location,
+              createdAt: persisted.createdAt,
+              transcriptText,
+            })
+          : buildMarkdownNote({
+              bookTitle,
+              location,
+              transcriptText,
+              createdAt,
+            });
 
         updateNote(noteId, { transcriptText, noteMarkdown, createdAt });
         updateStatus(noteId, "ready");
@@ -68,7 +82,6 @@ export function CaptureScreen() {
         updateStatus(noteId, "failed", String(error));
       }
     } catch (error) {
-      setRecording(null);
       Alert.alert("Recording error", String(error));
     }
   };
@@ -89,8 +102,12 @@ export function CaptureScreen() {
         style={inputStyle}
       />
       <View style={{ flexDirection: "row", gap: 8 }}>
-        <Button title="Start Recording" onPress={startRecording} disabled={Boolean(recording)} />
-        <Button title="Stop Recording" onPress={stopRecording} disabled={!recording} />
+        <Button
+          title="Start Recording"
+          onPress={startRecording}
+          disabled={recorderState.isRecording}
+        />
+        <Button title="Stop Recording" onPress={stopRecording} disabled={!recorderState.isRecording} />
       </View>
       <Text style={{ color: "#666" }}>
         Record a short note while reading; transcription starts after stopping.

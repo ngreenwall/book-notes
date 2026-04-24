@@ -1,15 +1,18 @@
-import * as Clipboard from "expo-clipboard";
 import React, { useEffect, useState } from "react";
 import { Alert, Button, Text, TextInput, View } from "react-native";
 
 import { buildMarkdownNote } from "../lib/markdown";
+import { saveNoteToVault } from "../lib/saveNoteToVault";
 import { useNoteStore } from "../store/useNoteStore";
+import { useSettingsStore } from "../store/useSettingsStore";
 
 export function ReviewScreen() {
   const notes = useNoteStore((state) => state.notes);
   const activeNoteId = useNoteStore((state) => state.activeNoteId);
   const updateNote = useNoteStore((state) => state.updateNote);
   const updateStatus = useNoteStore((state) => state.updateStatus);
+  const vaultRootUri = useSettingsStore((s) => s.vaultRootUri);
+  const vaultSubfolder = useSettingsStore((s) => s.vaultSubfolder);
 
   const activeNote = notes.find((note) => note.id === activeNoteId) ?? null;
   const [transcriptText, setTranscriptText] = useState("");
@@ -35,20 +38,32 @@ export function ReviewScreen() {
     Alert.alert("Saved", "Transcript and markdown updated.");
   };
 
-  const copyMarkdown = async () => {
+  const saveToVaultFromReview = async () => {
     if (!activeNote) return;
 
-    const markdown = activeNote.noteMarkdown || buildMarkdownNote({
-      bookTitle: activeNote.bookTitle,
-      location: activeNote.location,
-      createdAt: activeNote.createdAt,
-      transcriptText: transcriptText || activeNote.transcriptText,
-    });
+    const markdown =
+      activeNote.noteMarkdown ||
+      buildMarkdownNote({
+        bookTitle: activeNote.bookTitle,
+        location: activeNote.location,
+        createdAt: activeNote.createdAt,
+        transcriptText: transcriptText || activeNote.transcriptText,
+      });
 
-    await Clipboard.setStringAsync(markdown);
-    updateNote(activeNote.id, { noteMarkdown: markdown, transcriptText: transcriptText || activeNote.transcriptText });
-    updateStatus(activeNote.id, "exported");
-    Alert.alert("Copied", "Markdown copied to clipboard for Obsidian.");
+    const ok = await saveNoteToVault({
+      vaultRootUri,
+      vaultSubfolder,
+      markdown,
+      createdAt: activeNote.createdAt,
+      bookTitle: activeNote.bookTitle,
+    });
+    if (ok) {
+      updateNote(activeNote.id, {
+        noteMarkdown: markdown,
+        transcriptText: transcriptText || activeNote.transcriptText,
+      });
+      updateStatus(activeNote.id, "exported");
+    }
   };
 
   if (!activeNote) {
@@ -80,7 +95,7 @@ export function ReviewScreen() {
         }}
       />
       <Button title="Save Transcript Edits" onPress={saveTranscript} />
-      <Button title="Copy Markdown" onPress={copyMarkdown} />
+      <Button title="Save to Vault" onPress={saveToVaultFromReview} />
     </View>
   );
 }
