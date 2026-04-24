@@ -16,6 +16,9 @@ export function ReviewScreen() {
 
   const activeNote = notes.find((note) => note.id === activeNoteId) ?? null;
   const [transcriptText, setTranscriptText] = useState("");
+  const [bookTitle, setBookTitle] = useState("");
+  const [author, setAuthor] = useState("");
+  const [pageNumber, setPageNumber] = useState("");
   const dirtyRef = useRef(false);
   const loadedIdRef = useRef<string | null>(null);
 
@@ -28,29 +31,50 @@ export function ReviewScreen() {
       loadedIdRef.current = id;
       dirtyRef.current = false;
       setTranscriptText(incoming);
+      setBookTitle(activeNote?.bookTitle ?? "");
+      setAuthor(activeNote?.author ?? "");
+      setPageNumber(activeNote?.location ?? "");
       return;
     }
     if (!dirtyRef.current) {
       setTranscriptText(incoming);
     }
-  }, [activeNote?.id, activeNote?.transcriptText]);
+  }, [
+    activeNote?.id,
+    activeNote?.bookTitle,
+    activeNote?.author,
+    activeNote?.location,
+    activeNote?.transcriptText,
+  ]);
 
   const onChangeTranscript = (value: string) => {
     dirtyRef.current = true;
     setTranscriptText(value);
   };
 
+  const hasBookTitle = !!bookTitle.trim();
+  const normalizedBookTitle = bookTitle.trim() || undefined;
+  const normalizedAuthor = author.trim() || undefined;
+  const normalizedPageNumber = pageNumber.trim() || undefined;
+
   const saveTranscript = () => {
     if (!activeNote) return;
 
     const noteMarkdown = buildMarkdownNote({
-      bookTitle: activeNote.bookTitle,
-      location: activeNote.location,
+      bookTitle: normalizedBookTitle,
+      author: normalizedAuthor,
+      location: normalizedPageNumber,
       createdAt: activeNote.createdAt,
       transcriptText,
     });
 
-    updateNote(activeNote.id, { transcriptText, noteMarkdown });
+    updateNote(activeNote.id, {
+      bookTitle: normalizedBookTitle,
+      author: normalizedAuthor,
+      location: normalizedPageNumber,
+      transcriptText,
+      noteMarkdown,
+    });
     if (activeNote.status !== "exported") {
       updateStatus(activeNote.id, "ready");
     }
@@ -64,8 +88,9 @@ export function ReviewScreen() {
     const markdown =
       activeNote.noteMarkdown ||
       buildMarkdownNote({
-        bookTitle: activeNote.bookTitle,
-        location: activeNote.location,
+        bookTitle: normalizedBookTitle,
+        author: normalizedAuthor,
+        location: normalizedPageNumber,
         createdAt: activeNote.createdAt,
         transcriptText: transcriptText || activeNote.transcriptText,
       });
@@ -75,10 +100,14 @@ export function ReviewScreen() {
       vaultSubfolder,
       markdown,
       createdAt: activeNote.createdAt,
-      bookTitle: activeNote.bookTitle,
+      bookTitle: normalizedBookTitle,
+      pageNumber: normalizedPageNumber,
     });
     if (ok) {
       updateNote(activeNote.id, {
+        bookTitle: normalizedBookTitle,
+        author: normalizedAuthor,
+        location: normalizedPageNumber,
         noteMarkdown: markdown,
         transcriptText: transcriptText || activeNote.transcriptText,
       });
@@ -100,6 +129,44 @@ export function ReviewScreen() {
       <Text style={{ fontSize: 22, fontWeight: "700" }}>Review</Text>
       <Text>Status: {activeNote.status}</Text>
       {activeNote.errorMessage ? <Text style={{ color: "crimson" }}>{activeNote.errorMessage}</Text> : null}
+      {!hasBookTitle ? (
+        <Text style={{ color: "#8a6d3b", fontSize: 12 }}>
+          Add a book title below before saving this note to your vault.
+        </Text>
+      ) : null}
+      <TextInput
+        value={bookTitle}
+        onChangeText={setBookTitle}
+        placeholder="Book title"
+        style={{
+          borderWidth: 1,
+          borderColor: "#ddd",
+          borderRadius: 10,
+          padding: 12,
+        }}
+      />
+      <TextInput
+        value={author}
+        onChangeText={setAuthor}
+        placeholder="Author"
+        style={{
+          borderWidth: 1,
+          borderColor: "#ddd",
+          borderRadius: 10,
+          padding: 12,
+        }}
+      />
+      <TextInput
+        value={pageNumber}
+        onChangeText={setPageNumber}
+        placeholder="Page number"
+        style={{
+          borderWidth: 1,
+          borderColor: "#ddd",
+          borderRadius: 10,
+          padding: 12,
+        }}
+      />
       <TextInput
         multiline
         value={transcriptText}
@@ -115,7 +182,7 @@ export function ReviewScreen() {
         }}
       />
       <Button title="Save Transcript Edits" onPress={saveTranscript} />
-      <Button title="Save to Vault" onPress={saveToVaultFromReview} />
+      <Button title="Save to Vault" onPress={saveToVaultFromReview} disabled={!hasBookTitle} />
     </View>
   );
 }

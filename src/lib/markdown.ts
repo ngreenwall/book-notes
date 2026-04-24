@@ -1,18 +1,28 @@
 import type { Note } from "../types/note";
 
-export function buildMarkdownNote(note: Pick<Note, "bookTitle" | "location" | "createdAt" | "transcriptText">) {
-  const title = note.bookTitle?.trim() || "Reading Note";
-  const book = note.bookTitle?.trim() || "Unknown book";
-  const pageOrChapter = note.location?.trim() || "N/A";
-  const capturedAt = new Date(note.createdAt).toLocaleString();
+function formatDate(dateIso: string): string {
+  const date = new Date(dateIso);
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  const year = String(date.getFullYear());
+  return `${month}-${day}-${year}`;
+}
+
+export function buildMarkdownNote(note: Pick<Note, "bookTitle" | "author" | "location" | "createdAt" | "transcriptText">) {
+  const bookTitle = note.bookTitle?.trim() || "";
+  const author = note.author?.trim() || "";
+  const page = note.location?.trim() || "";
+  const capturedDate = formatDate(note.createdAt);
   const body = note.transcriptText?.trim() || "_(no transcript yet)_";
 
-  return `# ${title}
+  return `---
+date: ${capturedDate}
+title: ${bookTitle}
+author: ${author}
+page: ${page}
+tags:
+---
 
-- Book: ${book}
-- Page / chapter: ${pageOrChapter}
-- Captured: ${capturedAt}
-
-${body}
-`;
+## Quote
+${body}`;
 }

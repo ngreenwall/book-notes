@@ -16,9 +16,12 @@ Cursor loads [`.cursor/rules/book-notes-voice.mdc`](.cursor/rules/book-notes-voi
 
 - Record a short voice note while reading.
 - Auto-transcribe after recording on **iOS** using Apple Speech (on-device when supported; falls back to Apple’s network recognition if needed).
-- Edit transcript in **Review**.
-- Generate markdown note content.
+- Edit transcript and metadata (`title`, `author`, `page`) in **Review**.
+- Generate markdown note content using fixed Obsidian-style frontmatter:
+  - `date`, `title`, `author`, `page`, `tags`
+  - date format `MM-DD-YYYY`
 - **Save to Vault** writes the note as a `.md` file using a **system folder picker** (configure under **History**). Details: [docs/CONTEXT.md](docs/CONTEXT.md) (vault / iOS session access).
+- Exported filename format: `Book Title, Page Number, Date.md`.
 - Persist history locally with statuses (`transcribing`, `ready`, `exported`, `failed`).
 
 ## Stack
@@ -49,6 +52,12 @@ Cursor loads [`.cursor/rules/book-notes-voice.mdc`](.cursor/rules/book-notes-voi
 
    ```bash
    npx tsc --noEmit
+   ```
+
+4. **Run tests** (Vitest):
+
+   ```bash
+   npm test
    ```
 
 ## Run on your iPhone for testing

@@ -4,6 +4,7 @@ export type Note = {
   id: string;
   createdAt: string;
   bookTitle?: string;
+  author?: string;
   location?: string;
   audioUri: string;
   transcriptText: string;

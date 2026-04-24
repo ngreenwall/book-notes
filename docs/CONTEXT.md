@@ -25,6 +25,7 @@ Deep operational notes for humans and coding agents. **Product overview and inst
 - **Audio:** `expo-audio` in `CaptureScreen.tsx` (not `expo-av`).
 - **Transcription (iOS):** `expo-speech-recognition` in `src/lib/transcribe.ts` — on-device when supported, else Apple network recognition; accepts an optional `AbortSignal` (Capture cancels pending transcription on unmount); **non-iOS** `transcribeAudio` throws (use Review manually).
 - **Vault:** `expo-file-system` — `Directory.pickDirectoryAsync`, write via `src/lib/saveNoteToVault.ts`; UI `src/components/VaultSettingsCard.tsx`; optional subfolder in settings. **iOS:** access to the picked folder is **session-scoped**; after a cold app restart the user may need **Choose vault folder** again before saves work.
+- **Export contract:** markdown uses app-side Obsidian frontmatter (`date`, `title`, `author`, `page`, `tags`) with `MM-DD-YYYY` dates, plus `## Quote` body. Filename uses `Book Title, Page Number, Date.md`.
 - **`app.json` plugins:** `expo-audio`, `expo-asset`, `expo-file-system` (`supportsOpeningDocumentsInPlace: true`), `expo-speech-recognition`.
 - **iOS Info.plist:** `LSSupportsOpeningDocumentsInPlace` for document workflow; no `obsidian` URL scheme (removed when Save to Vault replaced Obsidian URIs).
 - **`patch-package`:** `postinstall` reapplies `patches/expo-constants+55.0.15.patch` (iOS script paths with spaces in `$PODS_TARGET_SRCROOT`).
@@ -133,6 +134,7 @@ Xcode → Settings → Accounts → Manage Certificates → **+** → Apple Deve
 | Install deps | `npm install` |
 | Start Metro | `npx expo start` |
 | Clear Metro cache | `npx expo start -c` |
+| Run tests | `npm test` |
 | Simulator from Metro | `i` |
 | Tunnel | `npx expo start --tunnel` |
 | Health check | `npx expo-doctor` |
@@ -154,4 +156,5 @@ Xcode → Settings → Accounts → Manage Certificates → **+** → Apple Deve
 Keep the **newest** entry at the **top** (one or two lines per session is enough).
 
 - **2026-04-24** — architecture review pass: Capture now cancels pending transcription on unmount (AbortSignal) and shows a "Transcribing…" indicator; Review guards local edits with a dirty-ref so store updates don't clobber typing; History has a **Delete** action that also removes the local audio file (new `deleteNote` in `useNoteStore`); markdown shows `_(no transcript yet)_` when empty; `"draft"` dropped from `NoteStatus`; `openai` removed from dependencies.
+- **2026-04-24** — export + metadata pass: markdown now exports Obsidian frontmatter (`date/title/author/page/tags`) with `MM-DD-YYYY` date formatting and filename `Book Title, Page Number, Date.md`; Capture collects author; Review edits title/author/page and transcript; save to vault now requires title, normalizes metadata spacing, and gives proactive vault-access-expired guidance on stale iOS folder permissions; Vitest suite added for markdown/path/store behaviors.
 - _Add entries here when wrapping a session (what shipped, what is next, blockers)._

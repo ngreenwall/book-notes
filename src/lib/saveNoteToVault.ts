@@ -17,6 +17,10 @@ function resolveVaultRoot(vaultRootUri: string): Directory {
   return new Directory(vaultRootUri);
 }
 
+function normalizeField(value: string | null | undefined): string {
+  return value?.replace(/\s+/g, " ").trim() || "";
+}
+
 /**
  * Writes markdown under the chosen vault root and optional subfolder path.
  * On iOS, access to a previously picked folder may stop after the app restarts; pick the folder again if save fails.
@@ -27,14 +31,26 @@ export async function saveNoteToVault(params: {
   markdown: string;
   createdAt: string;
   bookTitle?: string | null;
+  pageNumber?: string | null;
 }): Promise<boolean> {
   const vaultRootUri = params.vaultRootUri.trim();
+  const normalizedBookTitle = normalizeField(params.bookTitle);
+  const normalizedPageNumber = normalizeField(params.pageNumber);
   if (!vaultRootUri) {
     Alert.alert("Vault", "Choose a vault folder under History first.");
     return false;
   }
+  if (!normalizedBookTitle) {
+    Alert.alert("Missing title", "Add a book title before saving to vault.");
+    return false;
+  }
 
-  const relative = buildRelativeNotePath(params.vaultSubfolder, params.createdAt, params.bookTitle);
+  const relative = buildRelativeNotePath(
+    params.vaultSubfolder,
+    params.createdAt,
+    normalizedBookTitle,
+    normalizedPageNumber
+  );
   const segments = relative.split("/").filter(Boolean);
   if (segments.length === 0) {
     Alert.alert("Vault", "Could not build a file name for this note.");
@@ -46,6 +62,14 @@ export async function saveNoteToVault(params: {
 
   try {
     let dir = resolveVaultRoot(vaultRootUri);
+    if (!dir.exists) {
+      sessionVaultRoot = null;
+      Alert.alert(
+        "Vault access expired",
+        "Could not access the selected vault folder. Choose vault folder again under History (iOS may reset folder permissions after app restart)."
+      );
+      return false;
+    }
     for (const part of dirSegments) {
       const next = new Directory(dir, part);
       if (!next.exists) {

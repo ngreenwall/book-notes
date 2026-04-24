@@ -7,6 +7,7 @@ import type { Note, NoteStatus } from "../types/note";
 
 type CreateNoteInput = {
   bookTitle?: string;
+  author?: string;
   location?: string;
   audioUri: string;
   createdAt?: string;
@@ -40,12 +41,13 @@ export const useNoteStore = create<NoteStore>()(
     (set, get) => ({
       notes: [],
       activeNoteId: null,
-      createNote: ({ bookTitle, location, audioUri, createdAt }) => {
+      createNote: ({ bookTitle, author, location, audioUri, createdAt }) => {
         const id = `${Date.now()}-${Math.floor(Math.random() * 10000)}`;
         const note: Note = {
           id,
           createdAt: createdAt || new Date().toISOString(),
           bookTitle: bookTitle?.trim() || undefined,
+          author: author?.trim() || undefined,
           location: location?.trim() || undefined,
           audioUri,
           transcriptText: "",

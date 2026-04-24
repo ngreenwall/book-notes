@@ -46,6 +46,15 @@ export function VaultSettingsCard() {
         }
       })()
     : "None selected";
+  const vaultAccessible = vaultRootUri
+    ? (() => {
+        try {
+          return new Directory(vaultRootUri).exists;
+        } catch {
+          return false;
+        }
+      })()
+    : null;
 
   return (
     <View
@@ -67,6 +76,11 @@ export function VaultSettingsCard() {
       <Text style={{ fontSize: 13, color: "#333" }}>
         Folder: <Text style={{ fontWeight: "600" }}>{vaultLabel}</Text>
       </Text>
+      {vaultRootUri && !vaultAccessible ? (
+        <Text style={{ color: "#8a6d3b", fontSize: 12 }}>
+          Current folder access appears unavailable. Choose vault folder again (common after iOS app restart).
+        </Text>
+      ) : null}
       <Button title={picking ? "Opening picker…" : "Choose vault folder"} onPress={chooseFolder} disabled={picking} />
       <TextInput
         value={vaultSubfolder}

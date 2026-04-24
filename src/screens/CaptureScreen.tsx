@@ -22,6 +22,7 @@ export function CaptureScreen() {
   const recorderState = useAudioRecorderState(audioRecorder);
 
   const [bookTitle, setBookTitle] = useState("");
+  const [author, setAuthor] = useState("");
   const [location, setLocation] = useState("");
   const [isTranscribing, setIsTranscribing] = useState(false);
   const transcribeAbortRef = useRef<AbortController | null>(null);
@@ -65,8 +66,9 @@ export function CaptureScreen() {
       }
 
       const createdAt = new Date().toISOString();
-      const noteId = createNote({ bookTitle, location, audioUri, createdAt });
+      const noteId = createNote({ bookTitle, author, location, audioUri, createdAt });
       setBookTitle("");
+      setAuthor("");
       setLocation("");
       setIsTranscribing(true);
 
@@ -85,6 +87,7 @@ export function CaptureScreen() {
         }
         const noteMarkdown = buildMarkdownNote({
           bookTitle: persisted.bookTitle,
+          author: persisted.author,
           location: persisted.location,
           createdAt: persisted.createdAt,
           transcriptText,
@@ -118,10 +121,21 @@ export function CaptureScreen() {
         placeholder="Book title (optional)"
         style={inputStyle}
       />
+      {!bookTitle.trim() ? (
+        <Text style={{ color: "#8a6d3b", fontSize: 12 }}>
+          Add a book title if you plan to save this note to your vault.
+        </Text>
+      ) : null}
+      <TextInput
+        value={author}
+        onChangeText={setAuthor}
+        placeholder="Author (optional)"
+        style={inputStyle}
+      />
       <TextInput
         value={location}
         onChangeText={setLocation}
-        placeholder="Page / chapter (optional)"
+        placeholder="Page number (optional)"
         style={inputStyle}
       />
       <View style={{ flexDirection: "row", gap: 8 }}>
