@@ -82,6 +82,42 @@ Use a **real device** for microphone + speech; the Simulator often produces empt
 
 Signing errors, “No script URL,” firewall, and tunnel mode are covered in [docs/CONTEXT.md](docs/CONTEXT.md) → **Physical iPhone (dev build)** and **Metro / dev server**.
 
+### Quick repeat checklist (two terminals + phone)
+
+Use this when the app already worked once and you just want to run it again.
+
+#### Terminal 1 (Metro)
+
+```bash
+npm run start
+```
+
+- Keep this running.
+- Leave it on **LAN** (for physical phone testing).
+
+#### Terminal 2 (native iOS dev build install)
+
+```bash
+npx expo run:ios --device
+```
+
+- Pick your iPhone if prompted.
+- Wait for build + install to finish.
+
+#### On your iPhone
+
+1. Open the installed **booknotesvoice** dev app.
+2. Confirm iPhone and Mac are on the same Wi-Fi (or use USB networking).
+3. If prompted, allow **Microphone** and **Speech Recognition** permissions.
+4. Test flow: **Capture → Stop → Transcript appears**.
+5. Go to **History** and use **Choose vault folder** (again if needed after restart), then test **Save to Vault**.
+
+#### Why both terminals are needed
+
+- `expo run:ios --device` builds/installs the **native app container** on the phone.
+- `npm run start` runs **Metro**, which serves your latest JavaScript bundle to that app.
+- No Metro = app opens but cannot load current JS ("No script URL"/connection errors).
+
 ## Continuing in a new chat (context window full)
 
 1. **Update the session log** at the bottom of [docs/CONTEXT.md](docs/CONTEXT.md) — one or two lines: what changed, what is next, any blockers. That preserves state without pasting a long chat.
