@@ -6,7 +6,7 @@ import {
   useAudioRecorderState,
 } from "expo-audio";
 import { File } from "expo-file-system";
-import React, { useCallback, useEffect, useRef, useState } from "react";
+import React, { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
 import {
   ActivityIndicator,
   Alert,
@@ -43,6 +43,9 @@ type NoteCreatorScreenProps = {
   bookId: string;
   onClose: () => void;
   onSaved: () => void;
+  /** When embedded in a bottom sheet, use flex scroll and register Android back with the sheet Modal. */
+  layoutVariant?: "fullscreen" | "sheet";
+  onRegisterHardwareBack?: (handler: (() => void) | null) => void;
 };
 
 /** Snapshot for dirty-check: metadata trimmed to match persisted values; note body unchanged. */
@@ -53,7 +56,15 @@ function serializeFormSnapshot(pageNumber: string, noteBody: string): string {
   });
 }
 
-export function NoteCreatorScreen({ mode, noteId, bookId, onClose, onSaved }: NoteCreatorScreenProps) {
+export function NoteCreatorScreen({
+  mode,
+  noteId,
+  bookId,
+  onClose,
+  onSaved,
+  layoutVariant = "fullscreen",
+  onRegisterHardwareBack,
+}: NoteCreatorScreenProps) {
   const createNote = useNoteStore((s) => s.createNote);
   const updateNote = useNoteStore((s) => s.updateNote);
   const getNoteById = useNoteStore((s) => s.getNoteById);
@@ -74,6 +85,7 @@ export function NoteCreatorScreen({ mode, noteId, bookId, onClose, onSaved }: No
   const transcribeAbortRef = useRef<AbortController | null>(null);
   const isMountedRef = useRef(true);
   const storedAudioUriRef = useRef<string | undefined>(undefined);
+  const scrollRef = useRef<ScrollView>(null);
 
   useEffect(() => {
     return () => {
@@ -113,12 +125,10 @@ export function NoteCreatorScreen({ mode, noteId, bookId, onClose, onSaved }: No
     }
   }, [mode, noteId, resetFromNote]);
 
-  const isDirty = () => {
-    return serializeFormSnapshot(pageNumber, noteBody) !== initialSnapshot || !!pendingAudioUri;
-  };
-
-  const requestClose = () => {
-    if (!isDirty()) {
+  const requestClose = useCallback(() => {
+    const dirty =
+      serializeFormSnapshot(pageNumber, noteBody) !== initialSnapshot || !!pendingAudioUri;
+    if (!dirty) {
       onClose();
       return;
     }
@@ -138,7 +148,13 @@ export function NoteCreatorScreen({ mode, noteId, bookId, onClose, onSaved }: No
         },
       },
     ]);
-  };
+  }, [initialSnapshot, mode, noteBody, onClose, pageNumber, pendingAudioUri]);
+
+  useLayoutEffect(() => {
+    if (!onRegisterHardwareBack) return;
+    onRegisterHardwareBack(() => requestClose());
+    return () => onRegisterHardwareBack(null);
+  }, [onRegisterHardwareBack, requestClose]);
 
   const startRecording = async () => {
     setTranscribeError(null);
@@ -336,7 +352,7 @@ export function NoteCreatorScreen({ mode, noteId, bookId, onClose, onSaved }: No
 
   if (mode === "edit" && noteId && !noteFromStore) {
     return (
-      <View style={styles.emptyState}>
+      <View style={[styles.emptyState, layoutVariant === "sheet" && styles.emptyStateSheet]}>
         <Text style={styles.emptyTitle}>Note not found</Text>
         <TouchableOpacity style={styles.primaryButton} onPress={onClose} accessibilityRole="button">
           <Text style={styles.primaryButtonText}>Close</Text>
@@ -349,8 +365,23 @@ export function NoteCreatorScreen({ mode, noteId, bookId, onClose, onSaved }: No
   const stopDisabled = !recorderState.isRecording || isTranscribing;
   const saveDisabled = isTranscribing;
 
+  /** Sheet: iOS uses parent KeyboardAvoidingView — disable ScrollView inset to avoid double-shift. Android has no parent KAV — let ScrollView adjust insets. */
+  const sheetScrollProps =
+    layoutVariant === "sheet"
+      ? {
+          automaticallyAdjustKeyboardInsets: Platform.OS === "android",
+          ...(Platform.OS === "ios" ? { contentInsetAdjustmentBehavior: "never" as const } : {}),
+        }
+      : {};
+
   return (
-    <ScrollView contentContainerStyle={styles.scrollContent} keyboardShouldPersistTaps="handled">
+    <ScrollView
+      ref={scrollRef}
+      style={layoutVariant === "sheet" ? styles.scrollSheet : undefined}
+      contentContainerStyle={styles.scrollContent}
+      keyboardShouldPersistTaps="handled"
+      {...sheetScrollProps}
+    >
       <View style={styles.stack}>
         <View style={styles.headerRow}>
           <Text style={styles.screenTitle}>{title}</Text>
@@ -379,6 +410,11 @@ export function NoteCreatorScreen({ mode, noteId, bookId, onClose, onSaved }: No
           multiline
           value={noteBody}
           onChangeText={setNoteBody}
+          onFocus={() => {
+            setTimeout(() => {
+              scrollRef.current?.scrollToEnd({ animated: true });
+            }, 250);
+          }}
           placeholder="Type your note, or record below."
           placeholderTextColor={colors.textSubtle}
           style={[styles.input, styles.noteInput]}
@@ -439,6 +475,9 @@ export function NoteCreatorScreen({ mode, noteId, bookId, onClose, onSaved }: No
 }
 
 const styles = StyleSheet.create({
+  scrollSheet: {
+    flex: 1,
+  },
   scrollContent: {
     paddingBottom: 32,
   },
@@ -507,6 +546,7 @@ const styles = StyleSheet.create({
   },
   noteInput: {
     minHeight: 160,
+    maxHeight: 240,
     textAlignVertical: "top",
   },
   errorText: {
@@ -582,6 +622,10 @@ const styles = StyleSheet.create({
   emptyState: {
     gap: space.md,
     paddingVertical: space.md,
+  },
+  emptyStateSheet: {
+    flex: 1,
+    justifyContent: "center",
   },
   emptyTitle: {
     fontSize: 18,

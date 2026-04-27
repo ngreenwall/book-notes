@@ -17,7 +17,7 @@ For architecture, native iOS quirks, Metro, device install, and vault behavior, 
 
 - Books store: `src/store/useBookStore.ts` — AsyncStorage `book-notes-voice-books-v1` (persisted: `books`; includes system Uncategorized).
 - Notes store: `src/store/useNoteStore.ts` — AsyncStorage `book-notes-voice-store-v2` (persisted field: `notes` only; each note has `bookId`).
-- Flow: `MyBooksScreen` → open book → `BookNotesScreen` → `NoteCreatorScreen` (overlay) for new/edit note; vault export from book notes list or prior patterns.
+- Flow: `MyBooksScreen` → open book → `BookNotesScreen` → `NoteCreatorSheet` / `NoteCreatorScreen` (bottom sheet) for new/edit note; vault export from book notes list or prior patterns.
 - Settings: `src/store/useSettingsStore.ts` — `book-notes-voice-settings`; persisted `vaultRootUri`, `hasCompletedWelcome` (welcome skip/complete + legacy migration).
 - Save markdown: `src/lib/saveNoteToVault.ts`, paths: `src/lib/noteFilePath.ts`.
 

@@ -22,7 +22,7 @@ This is what the app can do right now. If something is not listed here, it is pr
 - **Tabs:** **My Books** and **Settings** only. Every note belongs to a book—there is no separate “all notes” home tab.
 - **First launch (iOS):** A short welcome flow helps you pick where markdown is saved; you can **Skip** and choose a folder later under **Settings** → **Choose notes folder**.
 - **My Books:** Add books (title + author). The list includes a system **Uncategorized** book; deleting a user book moves its notes there (you cannot delete Uncategorized). **Continue** opens the last book you used. Tap a book to open its note list; use **Back** to return to My Books.
-- **Inside a book:** **New note** opens the full-screen note creator. Book title and author come from the book; per note you set **page** (optional) and **Note** text—type or use **Stop & transcribe** on **iOS** (Apple Speech; on-device when supported, else network).
+- **Inside a book:** **New note** (and **Edit** on a note) opens the note creator in a **bottom sheet** over the book list. Book title and author come from the book; per note you set **page** (optional) and **Note** text—type or use **Stop & transcribe** on **iOS** (Apple Speech; on-device when supported, else network).
 - If no vault folder is saved yet, a dismissible banner can remind you to choose one in **Settings** (on **iOS**, you may need to pick the folder again after a cold app start—see [docs/CONTEXT.md](docs/CONTEXT.md)).
 - From the book’s note list, edit a note, **Save to vault** (markdown file), or delete.
 - Generate markdown note content using fixed Obsidian-style frontmatter:
@@ -182,6 +182,7 @@ src/
     BookNotesScreen.tsx
     HomeScreen.tsx
     MyBooksScreen.tsx
+    NoteCreatorSheet.tsx
     NoteCreatorScreen.tsx
     SettingsScreen.tsx
     WelcomeVaultScreen.tsx

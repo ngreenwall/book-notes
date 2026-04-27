@@ -5,7 +5,7 @@ import { SafeAreaProvider, SafeAreaView } from "react-native-safe-area-context";
 
 import { BookNotesScreen } from "./src/screens/BookNotesScreen";
 import { MyBooksScreen } from "./src/screens/MyBooksScreen";
-import { NoteCreatorScreen } from "./src/screens/NoteCreatorScreen";
+import { NoteCreatorSheet } from "./src/screens/NoteCreatorSheet";
 import { SettingsScreen } from "./src/screens/SettingsScreen";
 import { WelcomeVaultScreen } from "./src/screens/WelcomeVaultScreen";
 import { useBookStore } from "./src/store/useBookStore";
@@ -56,9 +56,11 @@ export default function App() {
   const showVaultBanner =
     settingsHydrated && hasCompletedWelcome && !vaultRootUri.trim() && !vaultBannerDismissed;
 
-  const handleNoteSaved = () => {
+  const handleCreatorFullyClosed = (reason: "dismiss" | "saved") => {
     setCreator(null);
-    setTab("books");
+    if (reason === "saved") {
+      setTab("books");
+    }
   };
 
   if (showIosWelcome) {
@@ -100,47 +102,43 @@ export default function App() {
             </TouchableOpacity>
           </View>
         ) : null}
-        {creator ? (
-          <View style={{ flex: 1, paddingHorizontal: 16, paddingBottom: 16, paddingTop: 8 }}>
-            <NoteCreatorScreen
-              mode={creator.mode}
-              noteId={creator.mode === "edit" ? creator.noteId : null}
-              bookId={activeBookId ?? ""}
-              onClose={() => setCreator(null)}
-              onSaved={handleNoteSaved}
-            />
+        <View style={{ flex: 1 }}>
+          <View style={{ flexDirection: "row", padding: 12, gap: 8, flexWrap: "wrap" }}>
+            <TabButton label="My Books" active={tab === "books"} onPress={() => setTab("books")} />
+            <TabButton label="Settings" active={tab === "settings"} onPress={() => setTab("settings")} />
           </View>
-        ) : (
-          <>
-            <View style={{ flexDirection: "row", padding: 12, gap: 8, flexWrap: "wrap" }}>
-              <TabButton label="My Books" active={tab === "books"} onPress={() => setTab("books")} />
-              <TabButton label="Settings" active={tab === "settings"} onPress={() => setTab("settings")} />
+          {tab === "settings" ? (
+            <View style={{ flex: 1 }}>
+              <SettingsScreen />
             </View>
-            {tab === "settings" ? (
-              <View style={{ flex: 1 }}>
-                <SettingsScreen />
-              </View>
-            ) : activeBookId ? (
-              <View style={{ flex: 1, paddingHorizontal: 16, paddingBottom: 16 }}>
-                <BookNotesScreen
-                  bookId={activeBookId}
-                  onBack={() => setActiveBookId(null)}
-                  onNewNote={() => setCreator({ mode: "new" })}
-                  onEditNote={(noteId) => setCreator({ mode: "edit", noteId })}
-                />
-              </View>
-            ) : (
-              <View style={{ flex: 1, paddingHorizontal: 16, paddingBottom: 16 }}>
-                <MyBooksScreen
-                  onOpenBook={(bookId) => {
-                    setActiveBookId(bookId);
-                    setTab("books");
-                  }}
-                />
-              </View>
-            )}
-          </>
-        )}
+          ) : activeBookId ? (
+            <View style={{ flex: 1, paddingHorizontal: 16, paddingBottom: 16 }}>
+              <BookNotesScreen
+                bookId={activeBookId}
+                onBack={() => setActiveBookId(null)}
+                onNewNote={() => setCreator({ mode: "new" })}
+                onEditNote={(noteId) => setCreator({ mode: "edit", noteId })}
+              />
+            </View>
+          ) : (
+            <View style={{ flex: 1, paddingHorizontal: 16, paddingBottom: 16 }}>
+              <MyBooksScreen
+                onOpenBook={(bookId) => {
+                  setActiveBookId(bookId);
+                  setTab("books");
+                }}
+              />
+            </View>
+          )}
+        </View>
+        {creator ? (
+          <NoteCreatorSheet
+            key={creator.mode === "edit" ? creator.noteId : "new-note"}
+            creator={creator}
+            bookId={activeBookId ?? ""}
+            onFullyClosed={handleCreatorFullyClosed}
+          />
+        ) : null}
       </SafeAreaView>
     </SafeAreaProvider>
   );
