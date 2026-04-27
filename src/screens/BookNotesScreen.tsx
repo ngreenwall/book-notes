@@ -63,7 +63,8 @@ function statusStyle(status: NoteStatus) {
 
 export function BookNotesScreen({ bookId, onBack, onNewNote, onEditNote }: BookNotesScreenProps) {
   const book = useBookStore((s) => s.getBookById(bookId));
-  const notes = useNoteStore((state) => state.notes.filter((n) => n.bookId === bookId));
+  const allNotes = useNoteStore((state) => state.notes);
+  const notes = useMemo(() => allNotes.filter((n) => n.bookId === bookId), [allNotes, bookId]);
   const sortedNotes = useMemo(
     () => [...notes].sort((a, b) => (a.createdAt < b.createdAt ? 1 : -1)),
     [notes]
