@@ -2,9 +2,8 @@ export type NoteStatus = "transcribing" | "ready" | "exported" | "failed";
 
 export type Note = {
   id: string;
+  bookId: string;
   createdAt: string;
-  bookTitle?: string;
-  author?: string;
   location?: string;
   /** Present when the note was saved with a recording; optional for typed-only notes. */
   audioUri?: string;

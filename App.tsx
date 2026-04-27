@@ -1,23 +1,28 @@
 import { StatusBar } from "expo-status-bar";
 import React, { useEffect, useState } from "react";
-import { Platform, ScrollView, Text, TouchableOpacity, View } from "react-native";
+import { Platform, Text, TouchableOpacity, View } from "react-native";
 import { SafeAreaProvider, SafeAreaView } from "react-native-safe-area-context";
 
-import { HomeScreen } from "./src/screens/HomeScreen";
+import { BookNotesScreen } from "./src/screens/BookNotesScreen";
+import { MyBooksScreen } from "./src/screens/MyBooksScreen";
 import { NoteCreatorScreen } from "./src/screens/NoteCreatorScreen";
 import { SettingsScreen } from "./src/screens/SettingsScreen";
 import { WelcomeVaultScreen } from "./src/screens/WelcomeVaultScreen";
-import { YourNotesScreen } from "./src/screens/YourNotesScreen";
+import { useBookStore } from "./src/store/useBookStore";
 import { useSettingsStore } from "./src/store/useSettingsStore";
+import { UNCATEGORIZED_BOOK_ID } from "./src/types/book";
 
-type Tab = "home" | "notes" | "settings";
+type Tab = "books" | "settings";
 type CreatorState = null | { mode: "new" } | { mode: "edit"; noteId: string };
 
 export default function App() {
-  const [tab, setTab] = useState<Tab>("home");
+  const [tab, setTab] = useState<Tab>("books");
   const [creator, setCreator] = useState<CreatorState>(null);
+  const [activeBookId, setActiveBookId] = useState<string | null>(null);
   const [settingsHydrated, setSettingsHydrated] = useState(() => useSettingsStore.persist.hasHydrated());
   const [vaultBannerDismissed, setVaultBannerDismissed] = useState(false);
+  const ensureDefaultBooks = useBookStore((s) => s.ensureDefaults);
+  const getBookById = useBookStore((s) => s.getBookById);
 
   const hasCompletedWelcome = useSettingsStore((s) => s.hasCompletedWelcome);
   const vaultRootUri = useSettingsStore((s) => s.vaultRootUri);
@@ -37,6 +42,14 @@ export default function App() {
       setVaultBannerDismissed(false);
     }
   }, [vaultRootUri]);
+  useEffect(() => {
+    ensureDefaultBooks();
+  }, [ensureDefaultBooks]);
+  useEffect(() => {
+    if (activeBookId && !getBookById(activeBookId)) {
+      setActiveBookId(UNCATEGORIZED_BOOK_ID);
+    }
+  }, [activeBookId, getBookById]);
 
   const showIosWelcome = Platform.OS === "ios" && settingsHydrated && !hasCompletedWelcome;
 
@@ -45,7 +58,7 @@ export default function App() {
 
   const handleNoteSaved = () => {
     setCreator(null);
-    setTab("notes");
+    setTab("books");
   };
 
   if (showIosWelcome) {
@@ -92,6 +105,7 @@ export default function App() {
             <NoteCreatorScreen
               mode={creator.mode}
               noteId={creator.mode === "edit" ? creator.noteId : null}
+              bookId={activeBookId ?? ""}
               onClose={() => setCreator(null)}
               onSaved={handleNoteSaved}
             />
@@ -99,26 +113,31 @@ export default function App() {
         ) : (
           <>
             <View style={{ flexDirection: "row", padding: 12, gap: 8, flexWrap: "wrap" }}>
-              <TabButton label="Home" active={tab === "home"} onPress={() => setTab("home")} />
-              <TabButton label="Your Notes" active={tab === "notes"} onPress={() => setTab("notes")} />
+              <TabButton label="My Books" active={tab === "books"} onPress={() => setTab("books")} />
               <TabButton label="Settings" active={tab === "settings"} onPress={() => setTab("settings")} />
             </View>
-            {tab === "notes" ? (
-              <View style={{ flex: 1, paddingHorizontal: 16, paddingBottom: 16 }}>
-                <YourNotesScreen onEditNote={(noteId) => setCreator({ mode: "edit", noteId })} />
-              </View>
-            ) : tab === "settings" ? (
+            {tab === "settings" ? (
               <View style={{ flex: 1 }}>
                 <SettingsScreen />
               </View>
+            ) : activeBookId ? (
+              <View style={{ flex: 1, paddingHorizontal: 16, paddingBottom: 16 }}>
+                <BookNotesScreen
+                  bookId={activeBookId}
+                  onBack={() => setActiveBookId(null)}
+                  onNewNote={() => setCreator({ mode: "new" })}
+                  onEditNote={(noteId) => setCreator({ mode: "edit", noteId })}
+                />
+              </View>
             ) : (
-              <ScrollView
-                style={{ flex: 1 }}
-                contentContainerStyle={{ padding: 16, paddingBottom: 30 }}
-                keyboardShouldPersistTaps="handled"
-              >
-                <HomeScreen onNewNote={() => setCreator({ mode: "new" })} />
-              </ScrollView>
+              <View style={{ flex: 1, paddingHorizontal: 16, paddingBottom: 16 }}>
+                <MyBooksScreen
+                  onOpenBook={(bookId) => {
+                    setActiveBookId(bookId);
+                    setTab("books");
+                  }}
+                />
+              </View>
             )}
           </>
         )}

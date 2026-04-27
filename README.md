@@ -19,8 +19,8 @@ Cursor loads [`.cursor/rules/book-notes-voice.mdc`](.cursor/rules/book-notes-voi
 
 This is what the app can do right now. If something is not listed here, it is probably not built yet.
 
-- Create notes from **Home** → **New note** (full-screen note creator): metadata (`title`, `author`, `page`) and a **Note** field you can type or fill with **Stop & transcribe** on **iOS** (Apple Speech; on-device when supported, else network).
-- Open **Your Notes** to edit, **Save to vault** (markdown file), or delete.
+- Open **My Books**, add a book (title + author), open it, then **New note** (full-screen note creator). Book title and author come from the book; per note you set **page** (optional) and a **Note** field you can type or fill with **Stop & transcribe** on **iOS** (Apple Speech; on-device when supported, else network).
+- From the book’s note list, edit a note, **Save to vault** (markdown file), or delete.
 - Generate markdown note content using fixed Obsidian-style frontmatter:
   - `date`, `title`, `author`, `page`, `tags`
   - date format `MM-DD-YYYY`
@@ -86,7 +86,7 @@ Use this when you are ready to test on your actual iPhone. A **real device** wor
 5. **[Every session] Keep Metro running** on your Mac (`npm run start`) — the dev client loads the JS bundle from your machine. Use **default LAN** (do not use `npx expo start --localhost` for a phone on Wi‑Fi).
 6. **[Every session] Same Wi‑Fi** for Mac and iPhone — so the phone can reach `http://<your-mac-ip>:8081` (unless you use `npx expo start --tunnel` for difficult networks).
 7. **[If prompted by iOS] Trust the developer app** — **Settings → General → VPN & Device Management** → trust your developer certificate.
-8. **[Every session] In the app, verify permissions + flow** — allow **Microphone** and **Speech Recognition** when prompted, then test **Home → New note → Stop & transcribe** (or type a note) **→ Save note**, then **Save to Vault** from **Your Notes** after choosing a folder under **Settings**.
+8. **[Every session] In the app, verify permissions + flow** — allow **Microphone** and **Speech Recognition** when prompted, then test **My Books** → open a book → **New note** → **Stop & transcribe** (or type) **→ Save note**, then **Save to vault** on a note after choosing a folder under **Settings**.
 
 Signing errors, “No script URL,” firewall, and tunnel mode are covered in [docs/CONTEXT.md](docs/CONTEXT.md) → **Physical iPhone (dev build)** and **Metro / dev server**.
 
@@ -117,7 +117,7 @@ npx expo run:ios --device
 1. Open the installed **booknotesvoice** dev app.
 2. Confirm iPhone and Mac are on the same Wi-Fi (or use USB networking).
 3. If prompted, allow **Microphone** and **Speech Recognition** permissions.
-4. Test flow: **Home → New note → Stop & transcribe** (or type), then **Save note** and **Your Notes → Save to vault**.
+4. Test flow: **My Books** → open a book → **New note** → **Stop & transcribe** (or type), then **Save note** and **Save to vault** on that note.
 5. Go to **Settings** and use **Choose notes folder** (again if needed after restart), then test **Save to Vault**.
 
 #### Why both terminals are needed
@@ -181,15 +181,19 @@ src/
     transcribe.ts
     vaultPicker.ts
   screens/
-    HomeScreen.tsx
+    MyBooksScreen.tsx
+    BookNotesScreen.tsx
     NoteCreatorScreen.tsx
-    YourNotesScreen.tsx
     SettingsScreen.tsx
     WelcomeVaultScreen.tsx
   store/
+    useBookStore.ts
     useNoteStore.ts
     useSettingsStore.ts
+  theme/
+    tokens.ts
   types/
+    book.ts
     note.ts
 ```
 

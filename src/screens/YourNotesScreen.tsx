@@ -5,6 +5,7 @@ import { canSaveToVaultFromHistory } from "../lib/historyValidation";
 import { buildMarkdownNote } from "../lib/markdown";
 import { saveNoteToVault } from "../lib/saveNoteToVault";
 import { transcribeAudio } from "../lib/transcribe";
+import { useBookStore } from "../store/useBookStore";
 import { useNoteStore } from "../store/useNoteStore";
 import { useSettingsStore } from "../store/useSettingsStore";
 
@@ -19,6 +20,7 @@ export function YourNotesScreen({ onEditNote }: YourNotesScreenProps) {
   const deleteNote = useNoteStore((state) => state.deleteNote);
   const getNoteById = useNoteStore((state) => state.getNoteById);
   const vaultRootUri = useSettingsStore((s) => s.vaultRootUri);
+  const getBookById = useBookStore((s) => s.getBookById);
 
   const retryTranscription = async (noteId: string, audioUri: string | undefined) => {
     if (!audioUri) {
@@ -30,8 +32,8 @@ export function YourNotesScreen({ onEditNote }: YourNotesScreenProps) {
       const note = getNoteById(noteId);
       const noteMarkdown = note
         ? buildMarkdownNote({
-            bookTitle: note.bookTitle,
-            author: note.author,
+            bookTitle: getBookById(note.bookId)?.title,
+            author: getBookById(note.bookId)?.author,
             location: note.location,
             createdAt: note.createdAt,
             transcriptText,
@@ -44,11 +46,11 @@ export function YourNotesScreen({ onEditNote }: YourNotesScreenProps) {
     }
   };
 
-  const confirmDelete = (noteId: string, bookTitle?: string, hasAudio?: boolean) => {
+  const confirmDelete = (noteId: string, title?: string, hasAudio?: boolean) => {
     const audioPhrase = hasAudio ? " and its audio file" : "";
     Alert.alert(
       "Delete note?",
-      `This removes "${bookTitle || "Reading Note"}"${audioPhrase} from this device. Any file already saved to your vault is not affected.`,
+      `This removes "${title || "Reading Note"}"${audioPhrase} from this device. Any file already saved to your vault is not affected.`,
       [
         { text: "Cancel", style: "cancel" },
         { text: "Delete", style: "destructive", onPress: () => deleteNote(noteId) },
@@ -84,11 +86,12 @@ export function YourNotesScreen({ onEditNote }: YourNotesScreenProps) {
         ListEmptyComponent={<Text style={{ color: "#666" }}>No notes yet. Tap New note on Home to create one.</Text>}
         ItemSeparatorComponent={() => <View style={{ height: 10 }} />}
         renderItem={({ item }) => {
+          const book = getBookById(item.bookId);
           const markdown =
             item.noteMarkdown ||
             buildMarkdownNote({
-              bookTitle: item.bookTitle,
-              author: item.author,
+              bookTitle: book?.title,
+              author: book?.author,
               location: item.location,
               createdAt: item.createdAt,
               transcriptText: item.transcriptText,
@@ -103,12 +106,12 @@ export function YourNotesScreen({ onEditNote }: YourNotesScreenProps) {
                 gap: 8,
               }}
             >
-              <Text style={{ fontWeight: "700" }}>{item.bookTitle || "Reading Note"}</Text>
-              {item.author ? <Text style={{ color: "#666" }}>Author: {item.author}</Text> : null}
+              <Text style={{ fontWeight: "700" }}>{book?.title || "Reading Note"}</Text>
+              {book?.author ? <Text style={{ color: "#666" }}>Author: {book.author}</Text> : null}
               {item.location ? <Text style={{ color: "#666" }}>Page: {item.location}</Text> : null}
               <Text style={{ color: "#666" }}>{new Date(item.createdAt).toLocaleString()}</Text>
               <Text>Status: {item.status}</Text>
-              {!canSaveToVaultFromHistory(item.bookTitle) ? (
+              {!canSaveToVaultFromHistory(book?.title) ? (
                 <Text style={{ color: "#8a6d3b", fontSize: 12 }}>
                   Add a book title when editing this note before saving to your vault folder.
                 </Text>
@@ -123,13 +126,13 @@ export function YourNotesScreen({ onEditNote }: YourNotesScreenProps) {
                 ) : null}
                 <Button
                   title="Save to vault"
-                  onPress={() => saveToVault(item.id, markdown, item.createdAt, item.bookTitle, item.location)}
-                  disabled={!canSaveToVaultFromHistory(item.bookTitle)}
+                  onPress={() => saveToVault(item.id, markdown, item.createdAt, book?.title, item.location)}
+                  disabled={!canSaveToVaultFromHistory(book?.title)}
                 />
                 <Button
                   title="Delete"
                   color="#c0392b"
-                  onPress={() => confirmDelete(item.id, item.bookTitle, !!item.audioUri)}
+                  onPress={() => confirmDelete(item.id, book?.title, !!item.audioUri)}
                 />
               </View>
             </View>

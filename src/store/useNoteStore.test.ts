@@ -29,8 +29,7 @@ describe("useNoteStore", () => {
 
   it("creates and updates a note status", () => {
     const id = useNoteStore.getState().createNote({
-      bookTitle: "Book",
-      author: "Author",
+      bookId: "book-1",
       location: "10",
       audioUri: "file:///tmp/audio.m4a",
       createdAt: "2026-04-24T12:00:00.000Z",
@@ -39,8 +38,7 @@ describe("useNoteStore", () => {
     });
 
     let note = useNoteStore.getState().getNoteById(id);
-    expect(note?.bookTitle).toBe("Book");
-    expect(note?.author).toBe("Author");
+    expect(note?.bookId).toBe("book-1");
     expect(note?.status).toBe("ready");
 
     useNoteStore.getState().updateStatus(id, "exported");
@@ -50,7 +48,7 @@ describe("useNoteStore", () => {
 
   it("creates a typed-only note without audio and deletes it", () => {
     const id = useNoteStore.getState().createNote({
-      bookTitle: "Book",
+      bookId: "book-1",
       transcriptText: "Typed body",
       noteMarkdown: "---\n## Note\nTyped body\n",
     });
@@ -59,5 +57,23 @@ describe("useNoteStore", () => {
     useNoteStore.getState().deleteNote(id);
 
     expect(useNoteStore.getState().getNoteById(id)).toBeUndefined();
+  });
+
+  it("moves notes from one book to another", () => {
+    const first = useNoteStore.getState().createNote({
+      bookId: "a",
+      transcriptText: "Note A",
+      noteMarkdown: "A",
+    });
+    const second = useNoteStore.getState().createNote({
+      bookId: "b",
+      transcriptText: "Note B",
+      noteMarkdown: "B",
+    });
+
+    useNoteStore.getState().moveNotesToBook("a", "uncategorized");
+
+    expect(useNoteStore.getState().getNoteById(first)?.bookId).toBe("uncategorized");
+    expect(useNoteStore.getState().getNoteById(second)?.bookId).toBe("b");
   });
 });

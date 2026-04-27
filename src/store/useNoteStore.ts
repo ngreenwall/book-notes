@@ -4,10 +4,10 @@ import { create } from "zustand";
 import { createJSONStorage, persist } from "zustand/middleware";
 
 import type { Note, NoteStatus } from "../types/note";
+import { UNCATEGORIZED_BOOK_ID } from "../types/book";
 
 type CreateNoteInput = {
-  bookTitle?: string;
-  author?: string;
+  bookId: string;
   location?: string;
   audioUri?: string;
   transcriptText: string;
@@ -22,6 +22,7 @@ type NoteStore = {
   updateNote: (id: string, patch: Partial<Note>) => void;
   updateStatus: (id: string, status: NoteStatus, errorMessage?: string) => void;
   deleteNote: (id: string) => void;
+  moveNotesToBook: (fromBookId: string, toBookId: string) => void;
   getNoteById: (id: string) => Note | undefined;
 };
 
@@ -42,8 +43,7 @@ export const useNoteStore = create<NoteStore>()(
     (set, get) => ({
       notes: [],
       createNote: ({
-        bookTitle,
-        author,
+        bookId,
         location,
         audioUri,
         transcriptText,
@@ -55,9 +55,8 @@ export const useNoteStore = create<NoteStore>()(
         const trimmedUri = audioUri?.trim();
         const note: Note = {
           id,
+          bookId: bookId.trim() || UNCATEGORIZED_BOOK_ID,
           createdAt: createdAt || new Date().toISOString(),
-          bookTitle: bookTitle?.trim() || undefined,
-          author: author?.trim() || undefined,
           location: location?.trim() || undefined,
           audioUri: trimmedUri || undefined,
           transcriptText,
@@ -95,10 +94,19 @@ export const useNoteStore = create<NoteStore>()(
           notes: state.notes.filter((n) => n.id !== id),
         }));
       },
+      moveNotesToBook: (fromBookId, toBookId) => {
+        if (!fromBookId.trim() || !toBookId.trim() || fromBookId === toBookId) return;
+        set((state) => ({
+          notes: state.notes.map((note) =>
+            note.bookId === fromBookId ? { ...note, bookId: toBookId } : note
+          ),
+        }));
+      },
       getNoteById: (id) => get().notes.find((note) => note.id === id),
     }),
     {
-      name: "book-notes-voice-store",
+      // v2 key intentionally resets old note-only data for books-first launch.
+      name: "book-notes-voice-store-v2",
       storage: createJSONStorage(() => AsyncStorage),
       partialize: (state) => ({ notes: state.notes }),
     }
