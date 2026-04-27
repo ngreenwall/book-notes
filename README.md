@@ -19,7 +19,11 @@ Cursor loads [`.cursor/rules/book-notes-voice.mdc`](.cursor/rules/book-notes-voi
 
 This is what the app can do right now. If something is not listed here, it is probably not built yet.
 
-- Open **My Books**, add a book (title + author), open it, then **New note** (full-screen note creator). Book title and author come from the book; per note you set **page** (optional) and a **Note** field you can type or fill with **Stop & transcribe** on **iOS** (Apple Speech; on-device when supported, else network).
+- **Tabs:** **My Books** and **Settings** only. Every note belongs to a book—there is no separate “all notes” home tab.
+- **First launch (iOS):** A short welcome flow helps you pick where markdown is saved; you can **Skip** and choose a folder later under **Settings** → **Choose notes folder**.
+- **My Books:** Add books (title + author). The list includes a system **Uncategorized** book; deleting a user book moves its notes there (you cannot delete Uncategorized). **Continue** opens the last book you used. Tap a book to open its note list; use **Back** to return to My Books.
+- **Inside a book:** **New note** opens the full-screen note creator. Book title and author come from the book; per note you set **page** (optional) and **Note** text—type or use **Stop & transcribe** on **iOS** (Apple Speech; on-device when supported, else network).
+- If no vault folder is saved yet, a dismissible banner can remind you to choose one in **Settings** (on **iOS**, you may need to pick the folder again after a cold app start—see [docs/CONTEXT.md](docs/CONTEXT.md)).
 - From the book’s note list, edit a note, **Save to vault** (markdown file), or delete.
 - Generate markdown note content using fixed Obsidian-style frontmatter:
   - `date`, `title`, `author`, `page`, `tags`
@@ -86,7 +90,7 @@ Use this when you are ready to test on your actual iPhone. A **real device** wor
 5. **[Every session] Keep Metro running** on your Mac (`npm run start`) — the dev client loads the JS bundle from your machine. Use **default LAN** (do not use `npx expo start --localhost` for a phone on Wi‑Fi).
 6. **[Every session] Same Wi‑Fi** for Mac and iPhone — so the phone can reach `http://<your-mac-ip>:8081` (unless you use `npx expo start --tunnel` for difficult networks).
 7. **[If prompted by iOS] Trust the developer app** — **Settings → General → VPN & Device Management** → trust your developer certificate.
-8. **[Every session] In the app, verify permissions + flow** — allow **Microphone** and **Speech Recognition** when prompted, then test **My Books** → open a book → **New note** → **Stop & transcribe** (or type) **→ Save note**, then **Save to vault** on a note after choosing a folder under **Settings**.
+8. **[Every session] In the app, verify permissions + flow** — allow **Microphone** and **Speech Recognition** when prompted, then test **My Books** → open a book (or **Continue**) → **New note** → **Stop & transcribe** (or type) **→ Save note**, then **Save to vault** on a note after choosing a folder under **Settings**.
 
 Signing errors, “No script URL,” firewall, and tunnel mode are covered in [docs/CONTEXT.md](docs/CONTEXT.md) → **Physical iPhone (dev build)** and **Metro / dev server**.
 
@@ -117,7 +121,7 @@ npx expo run:ios --device
 1. Open the installed **booknotesvoice** dev app.
 2. Confirm iPhone and Mac are on the same Wi-Fi (or use USB networking).
 3. If prompted, allow **Microphone** and **Speech Recognition** permissions.
-4. Test flow: **My Books** → open a book → **New note** → **Stop & transcribe** (or type), then **Save note** and **Save to vault** on that note.
+4. Test flow: **My Books** → open a book (or **Continue** if shown) → **New note** → **Stop & transcribe** (or type), then **Save note** and **Save to vault** on that note.
 5. Go to **Settings** and use **Choose notes folder** (again if needed after restart), then test **Save to Vault**.
 
 #### Why both terminals are needed
@@ -192,6 +196,8 @@ src/
     book.ts
     note.ts
 ```
+
+`HomeScreen.tsx` and `YourNotesScreen.tsx` are still in the repo but are **not** used by `App.tsx`; the shipped flow is **My Books** → pick a book → notes.
 
 ## Next steps (ideas)
 
