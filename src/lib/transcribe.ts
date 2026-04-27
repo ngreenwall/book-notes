@@ -1,9 +1,6 @@
-import {
-  ExpoSpeechRecognitionModule,
-  TaskHintIOS,
-} from "expo-speech-recognition";
 import { Platform } from "react-native";
 
+/** Dynamic-import speech so screens importing this file do not evaluate the native module until transcribe runs (Expo Go lacks it). */
 function normalizeFileUri(uri: string): string {
   const trimmed = uri.trim();
   if (trimmed.startsWith("file://")) {
@@ -15,11 +12,15 @@ function normalizeFileUri(uri: string): string {
   return trimmed;
 }
 
+type ExpoSpeechRecognitionNS = typeof import("expo-speech-recognition");
+
 function transcribeFileWithSpeechRecognition(
   uri: string,
   requiresOnDeviceRecognition: boolean,
-  signal?: AbortSignal
+  signal: AbortSignal | undefined,
+  speech: ExpoSpeechRecognitionNS
 ): Promise<string> {
+  const { ExpoSpeechRecognitionModule, TaskHintIOS } = speech;
   return new Promise((resolve, reject) => {
     const finalParts: string[] = [];
     let latestPartial = "";
@@ -149,6 +150,8 @@ export async function transcribeAudio(
     );
   }
 
+  const speech = await import("expo-speech-recognition");
+  const { ExpoSpeechRecognitionModule } = speech;
   const uri = normalizeFileUri(audioUri);
 
   const perm = await ExpoSpeechRecognitionModule.requestPermissionsAsync();
@@ -163,11 +166,11 @@ export async function transcribeAudio(
 
   if (onDeviceSupported) {
     try {
-      return await transcribeFileWithSpeechRecognition(uri, true, signal);
+      return await transcribeFileWithSpeechRecognition(uri, true, signal, speech);
     } catch {
-      return await transcribeFileWithSpeechRecognition(uri, false, signal);
+      return await transcribeFileWithSpeechRecognition(uri, false, signal, speech);
     }
   }
 
-  return await transcribeFileWithSpeechRecognition(uri, false, signal);
+  return await transcribeFileWithSpeechRecognition(uri, false, signal, speech);
 }
