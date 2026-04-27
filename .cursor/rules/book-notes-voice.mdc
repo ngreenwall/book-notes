@@ -8,4 +8,4 @@ alwaysApply: true
 - **Dev build:** Speech + recording expect `npx expo run:ios` (or `--device`), not stock Expo Go for full behavior.
 - **Vault:** Markdown is saved with `expo-file-system` after the user picks a folder (`VaultSettingsCard` / `saveNoteToVault.ts`). **iOS** picked-directory access is often **session-only**; saves can fail after restart until the user picks the folder again.
 - **Repo:** `npm install` runs `patch-package` (`patches/expo-constants+55.0.15.patch`). Paths with **spaces** in the clone directory are mitigated via `ios/Podfile.properties.json` (`buildReactNativeFromSource`); moving the repo to a path without spaces is still safest.
-- **Context doc:** Prefer reading `docs/CONTEXT.md` (and `AGENTS.md`) for deep troubleshooting before inventing assumptions.
+- **Context doc:** Prefer reading `docs/CONTEXT.md` (and `AGENTS.md`) for deep troubleshooting before inventing assumptions. Session notes there are **Shipped**/**Next**/**Blockers** facts—not documentation-change narratives.

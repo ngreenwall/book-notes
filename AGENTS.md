@@ -1,6 +1,6 @@
 # Agent instructions — Book Notes Voice
 
-Session history source of truth: write dated session notes in `docs/CONTEXT.md` only.
+Session history source of truth: write dated session notes in `docs/CONTEXT.md` only (**Shipped** / **Next** / **Blockers** = repo and product state—avoid doc-changelog prose; details belong in archive or PRs).
 
 ## Read first
 

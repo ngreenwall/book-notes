@@ -11,7 +11,7 @@ Start here if you are not sure which file to read. Think of this as a "where do 
 |------|--------|
 | [README.md](README.md) | This file — what the app does, setup, run on device, how to start new chats. |
 | [AGENTS.md](AGENTS.md) | Short defaults for coding agents (dev build, vault, patch-package). |
-| [docs/CONTEXT.md](docs/CONTEXT.md) | Deep operational notes — Metro, Xcode, physical iPhone, troubleshooting, **optional session log** at the bottom. |
+| [docs/CONTEXT.md](docs/CONTEXT.md) | Deep operational notes — Metro, Xcode, physical iPhone, troubleshooting, plus **Recent session notes** (newest entry at the **top**). |
 
 Cursor loads [`.cursor/rules/book-notes-voice.mdc`](.cursor/rules/book-notes-voice.mdc) automatically for invariants.
 
@@ -135,17 +135,26 @@ Quick reusable handoff prompt (for this and future projects):
 Tip: you can run `/handoff` in Cursor chat to insert/use this prompt without copying and pasting.
 This command is project-local and defined in `.cursor/commands/handoff.md`.
 To reuse in another repo, copy `.cursor/commands/handoff.md` into that repo's `.cursor/commands/` folder.
+Slash commands are **plain Markdown only** (no YAML frontmatter — unlike `.cursor/rules/*.mdc`).
 
 ```text
-Before we end, do a quick handoff:
-1) Update docs/CONTEXT.md session log with only essentials (max 3 bullets total: what changed, what is next, blockers).
-2) Update other project memory/docs only if changes are durable and user-facing (skip duplicates/speculative notes; if none, say "No additional doc updates needed.").
-3) Deduplicate before adding: if the same point appears in the newest 1-2 session notes, update that note instead of appending a near-duplicate.
-4) Keep edits concise by updating existing text when possible, not adding new sections; if session notes exceed 10 entries, archive the oldest to `docs/archive/context-YYYY-MM.md` before adding a new one.
-If context will matter in the next chat, give me a 1-paragraph next-session starter prompt. Otherwise skip it.
+# Handoff
+
+Use at the **end of a session** to leave durable context for the next chat. Do **not** paste a full conversation recap or duplicate what already lives in `AGENTS.md` / `README.md`.
+
+In **Recent session notes**, write **Shipped** as **facts** the next agent needs (code behavior, screens, paths, APIs)—not narration about editing documentation or session housekeeping. Process belongs here and in `README`; move stale detail to `docs/archive/` when trimming.
+
+**Before we end:**
+
+1. Open `docs/CONTEXT.md` → **Recent session notes**. Read the newest 1–2 dated entries for dedup context.
+2. Add or update **one** session line following the **template and ordering rules written in that same section** (typically **Shipped:** / **Next:** / **Blockers:** on one or two lines). **Newest dated entry stays at the top** of that list. If your update overlaps the latest entry, **edit that line** instead of appending a near-duplicate.
+3. Update other project docs only when the change is durable and user-facing; if nothing applies, say “No additional doc updates needed.”
+4. If the session list would exceed **10** entries, archive the oldest to `docs/archive/context-YYYY-MM.md` first (per the instructions in that section).
+5. **Noise check:** run `rg "maybe|investigate later|brainstorm" docs/CONTEXT.md`. Only fix wording in **dated session entries**; ignore matches elsewhere in the file.
+6. If carryover context matters for the next chat, give a **one-paragraph** starter prompt for a new thread. Otherwise omit it.
 ```
 
-1. **After running the handoff prompt above, confirm the session log is updated** at the bottom of [docs/CONTEXT.md](docs/CONTEXT.md) (what changed, what is next, blockers), deduplicated, and still capped at 10 recent entries. If needed, add 1-2 lines manually.
+1. **After running the handoff prompt above, confirm** [docs/CONTEXT.md](docs/CONTEXT.md) **Recent session notes** has an updated **top** entry (**Shipped** / **Next** / **Blockers**), deduplicated, and still capped at 10 recent entries. If needed, adjust 1–2 lines manually.
 2. **Open a new chat** with the repo folder already open in Cursor.
 3. **If you need a starter prompt, paste or send something like this:** use it when prior context matters; skip it for small standalone tasks.
 
