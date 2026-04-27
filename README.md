@@ -130,31 +130,9 @@ npx expo run:ios --device
 
 Use this when you start a new Cursor chat and do not want to lose momentum. It helps the next agent understand what you already did and what to do next.
 
-Quick reusable handoff prompt (for this and future projects):
+**End of session:** Ask the agent to run the **handoff** workflow ([`.cursor/skills/handoff/SKILL.md`](.cursor/skills/handoff/SKILL.md)). Phrases like “handoff,” “wrap up,” or “end of session” usually load that skill. It updates [docs/CONTEXT.md](docs/CONTEXT.md) **Recent session notes** with durable facts—not a transcript. To reuse the same workflow in another repo, copy `.cursor/skills/handoff/` into that repo’s `.cursor/skills/` folder (or add `SKILL.md` wherever you keep Agent Skills).
 
-Tip: you can run `/handoff` in Cursor chat to insert/use this prompt without copying and pasting.
-This command is project-local and defined in `.cursor/commands/handoff.md`.
-To reuse in another repo, copy `.cursor/commands/handoff.md` into that repo's `.cursor/commands/` folder.
-Slash commands are **plain Markdown only** (no YAML frontmatter — unlike `.cursor/rules/*.mdc`).
-
-```text
-# Handoff
-
-Use at the **end of a session** to leave durable context for the next chat. Do **not** paste a full conversation recap or duplicate what already lives in `AGENTS.md` / `README.md`.
-
-In **Recent session notes**, write **Shipped** as **facts** the next agent needs (code behavior, screens, paths, APIs)—not narration about editing documentation or session housekeeping. Process belongs here and in `README`; move stale detail to `docs/archive/` when trimming.
-
-**Before we end:**
-
-1. Open `docs/CONTEXT.md` → **Recent session notes**. Read the newest 1–2 dated entries for dedup context.
-2. Add or update **one** session line following the **template and ordering rules written in that same section** (typically **Shipped:** / **Next:** / **Blockers:** on one or two lines). **Newest dated entry stays at the top** of that list. If your update overlaps the latest entry, **edit that line** instead of appending a near-duplicate.
-3. Update other project docs only when the change is durable and user-facing; if nothing applies, say “No additional doc updates needed.”
-4. If the session list would exceed **10** entries, archive the oldest to `docs/archive/context-YYYY-MM.md` first (per the instructions in that section).
-5. **Noise check:** run `rg "maybe|investigate later|brainstorm" docs/CONTEXT.md`. Only fix wording in **dated session entries**; ignore matches elsewhere in the file.
-6. If carryover context matters for the next chat, give a **one-paragraph** starter prompt for a new thread. Otherwise omit it.
-```
-
-1. **After running the handoff prompt above, confirm** [docs/CONTEXT.md](docs/CONTEXT.md) **Recent session notes** has an updated **top** entry (**Shipped** / **Next** / **Blockers**), deduplicated, and still capped at 10 recent entries. If needed, adjust 1–2 lines manually.
+1. **After a handoff (or after you edit CONTEXT yourself), confirm** [docs/CONTEXT.md](docs/CONTEXT.md) **Recent session notes** has an updated **top** entry (**Shipped** / **Next** / **Blockers**), deduplicated, and still capped at 10 recent entries. If needed, adjust 1–2 lines manually.
 2. **Open a new chat** with the repo folder already open in Cursor.
 3. **If you need a starter prompt, paste or send something like this:** use it when prior context matters; skip it for small standalone tasks.
 
@@ -178,23 +156,32 @@ This is a simple map of the project folders. Use it when you need a quick remind
 
 ```text
 App.tsx
+index.ts
+app.json
+assets/
 docs/
   CONTEXT.md
+  archive/
+ios/
+patches/
 src/
   components/
     VaultSettingsCard.tsx
   lib/
+    historyValidation.ts
     markdown.ts
     noteFilePath.ts
     saveNoteToVault.ts
     transcribe.ts
     vaultPicker.ts
   screens/
-    MyBooksScreen.tsx
     BookNotesScreen.tsx
+    HomeScreen.tsx
+    MyBooksScreen.tsx
     NoteCreatorScreen.tsx
     SettingsScreen.tsx
     WelcomeVaultScreen.tsx
+    YourNotesScreen.tsx
   store/
     useBookStore.ts
     useNoteStore.ts
